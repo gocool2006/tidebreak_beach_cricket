@@ -66,22 +66,26 @@ const venues = [
 
 const worldLegends = Object.entries(legendByTeam).flatMap(([country,names])=>names.map(name=>({name,country})));
 teams.push({id:"LEG",name:"World Legends",flag:"🌍",group:"ALL ERAS",captain:"Ricky Ponting",players:[],worldLegends:true});
+teams.push({id:"AUCTION",name:"Tidebreak Auction XI",flag:"🌊",group:"COASTAL LEAGUE",captain:"Auction Captain",players:[],auctionTeam:true});
 const teamById = Object.fromEntries(teams.map(team=>[team.id,team]));
 const venueById = Object.fromEntries(venues.map(venue=>[venue.id,venue]));
 const $ = (selector,root=document)=>root.querySelector(selector);
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 const randomItem=items=>items[Math.floor(Math.random()*items.length)];
-const currentMembers=id=> (teamById[id]?.players||[]).map((name,index)=>({key:`C:${id}:${name}`,name,team:id,era:"current",captain:name===teamById[id]?.captain,order:index+1}));
+const currentMembers=id=>id==="AUCTION"?(state.auction?.rosters?.[state.auction.clubId]||[]):(teamById[id]?.players||[]).map((name,index)=>({key:`C:${id}:${name}`,name,team:id,era:"current",captain:name===teamById[id]?.captain,order:index+1}));
 const legendMembers=id=> id==="LEG" ? worldLegends.map((p,index)=>({key:`L:${p.country}:${p.name}`,name:p.name,team:p.country,era:"legend",country:teamById[p.country]?.name||p.country,flag:teamById[p.country]?.flag||"🌍",order:index+1})) : (legendByTeam[id]||[]).map((name,index)=>({key:`L:${id}:${name}`,name,team:id,era:"legend",country:teamById[id]?.name||id,flag:teamById[id]?.flag||"🌍",order:index+1}));
 const membersForTeam=id=>[...currentMembers(id),...legendMembers(id)];
-const firstXI=id=> (id==="LEG"?legendMembers(id):currentMembers(id)).slice(0,11);
+const firstXI=id=>(id==="LEG"?legendMembers(id):currentMembers(id)).slice(0,11);
+const auctionClubs=[{id:"CORAL",name:"Coral Kings",flag:"🐚"},{id:"REEF",name:"Reef Rangers",flag:"🪸"},{id:"TIDE",name:"Tidebreak Mariners",flag:"🌊"},{id:"SUNSET",name:"Sunset Strikers",flag:"🌅"}];
+const auctionPlayers=Array.from(new Map(teams.filter(t=>t.id!=="LEG"&&t.id!=="AUCTION").flatMap(t=>membersForTeam(t.id)).map(p=>[p.key,p])).values());
+const auctionPlayerByKey=Object.fromEntries(auctionPlayers.map(p=>[p.key,p]));
 
 const state={
   sideTeams:["IND","AUS"],
   sideLineups:[firstXI("IND"),firstXI("AUS")],
   overs:5,venue:"TIDEBREAK_BAY",venueType:"beach",squadSide:0,squadPool:"current",game:null,toss:null,
   controls:{mode:"swipe",shotMap:"balanced",sensitivity:1,timingAssist:true,proMode:false,bowlMode:"tap"},
-  matchHistory:[]
+  matchHistory:[],auction:null
 };
 const SAVE_KEY="tidebreak.local.v1";
 const beachArtwork=new Image();
@@ -94,7 +98,7 @@ function saveLocalData(){
     if(game&&game.status==="live"&&(game.phase==="bat-flight"||game.phase==="bowl-meter"||game.phase==="shot-flight")){
       game.phase="ready";game.delivery=null;game.ballFlight=null;game.event="Match saved. The next delivery is ready.";
     }
-    localStorage.setItem(SAVE_KEY,JSON.stringify({version:1,savedAt:new Date().toISOString(),sideTeams:state.sideTeams,sideLineups:state.sideLineups.map(x=>x.map(p=>p.key)),overs:state.overs,venue:state.venue,venueType:state.venueType,game,toss:state.toss,controls:state.controls,matchHistory:state.matchHistory.slice(0,12)}));
+    localStorage.setItem(SAVE_KEY,JSON.stringify({version:1,savedAt:new Date().toISOString(),sideTeams:state.sideTeams,sideLineups:state.sideLineups.map(x=>x.map(p=>p.key)),overs:state.overs,venue:state.venue,venueType:state.venueType,game,toss:state.toss,controls:state.controls,matchHistory:state.matchHistory.slice(0,12),auction:state.auction}));
     const badge=$("#save-status");if(badge){badge.textContent="SAVED ON THIS DEVICE";badge.dataset.saved="true";}
   }catch(error){const badge=$("#save-status");if(badge){badge.textContent="LOCAL SAVE UNAVAILABLE";badge.dataset.saved="false";}}
 }
@@ -121,6 +125,11 @@ function loadLocalData(){
       if(typeof saved.controls.proMode==="boolean")state.controls.proMode=saved.controls.proMode;
     }
     state.matchHistory=Array.isArray(saved.matchHistory)?saved.matchHistory.slice(0,12):[];
+    const auction=saved.auction;
+    if(auction&&auctionClubs.some(c=>c.id===auction.clubId)&&Array.isArray(auction.lots)&&auction.lots.every(key=>auctionPlayerByKey[key])&&auction.rosters&&typeof auction.rosters==="object"&&auction.budgets&&typeof auction.budgets==="object"){
+      state.auction={...auction,lots:auction.lots.slice(0,auctionPlayers.length),rosters:Object.fromEntries(auctionClubs.map(c=>[c.id,Array.isArray(auction.rosters[c.id])?auction.rosters[c.id].filter(p=>p&&(auctionPlayerByKey[p.key]||auctionPlayerByKey[p.sourceKey])).slice(0,15):[]])),budgets:Object.fromEntries(auctionClubs.map(c=>[c.id,clamp(Number(auction.budgets[c.id])||0,0,100)])),lotIndex:clamp(Number(auction.lotIndex)||0,0,Math.max(0,auction.lots.length-1)),bid:Math.max(0,Number(auction.bid)||0)};
+    }
+    if(state.auction&&Array.isArray(saved.sideLineups))state.sideTeams.forEach((id,side)=>{if(id==="AUCTION"){const restored=(saved.sideLineups[side]||[]).map(key=>currentMembers("AUCTION").find(p=>p.key===key)).filter(Boolean);state.sideLineups[side]=restored.length===11?restored:firstXI("AUCTION");}});
     const g=saved.game;
     if(g&&Array.isArray(g.teamIds)&&g.teamIds.length===2&&g.teamIds.every(id=>teamById[id])&&venueById[g.venue]&&[5,10,20,30,50].includes(Number(g.overs))&&Array.isArray(g.lineups)&&g.innings){
       state.game=g;
@@ -131,7 +140,7 @@ function loadLocalData(){
   }catch(error){}
 }
 function fillSelects(){
-  const markup=teams.map(t=>'<option value="'+esc(t.id)+'">'+esc(t.flag)+"  "+esc(t.name)+(t.id==="LEG"?" · Classic stars":"")+"</option>").join("");
+  const markup=teams.map(t=>'<option value="'+esc(t.id)+'"'+(t.id==="AUCTION"&&currentMembers("AUCTION").length<11?" disabled":"")+'>'+esc(t.flag)+"  "+esc(t.name)+(t.id==="LEG"?" · Classic stars":t.id==="AUCTION"?" · Auction roster":"")+"</option>").join("");
   $("#team-a-select").innerHTML=markup;$("#team-b-select").innerHTML=markup;
   $("#team-a-select").value=state.sideTeams[0];$("#team-b-select").value=state.sideTeams[1];
 }
@@ -172,14 +181,15 @@ function renderSetup(){
     const team=teamById[id],lineup=state.sideLineups[side],count=$("#xi-"+(side===0?"a":"b")+"-count"),preview=$("#team-"+(side===0?"a":"b")+"-preview");
     count.textContent=lineup.length+"/11";
     const total=id==="LEG"?legendMembers(id).length:team.players.length;
-    const summary=id==="LEG"?total+" all-time greats · international squads available too":"ICC 2026 group "+team.group+" · "+total+" current squad players";
+    const summary=id==="AUCTION"?total+" purchased players · "+(state.auction?auctionClubById(state.auction.clubId).name:"auction mode"):id==="LEG"?total+" all-time greats · international squads available too":"ICC 2026 group "+team.group+" · "+total+" current squad players";
+    const auctionOption=$("#team-"+(side===0?"a":"b")+"-select").querySelector('option[value="AUCTION"]');if(auctionOption)auctionOption.disabled=currentMembers("AUCTION").length<11;
     preview.innerHTML='<span class="team-flag">'+team.flag+'</span><span><strong>'+esc(team.name)+'</strong><small>'+esc(summary)+'</small></span>';
   });
   $("#venue-type-options").innerHTML=[["beach","BEACH GROUNDS","🌊"],["green","GREEN STADIUMS","🏟️"]].map(([type,label,icon])=>'<button class="venue-type-button" data-venue-type="'+type+'" aria-pressed="'+(state.venueType===type)+'"><span>'+icon+'</span> '+label+' <small>'+venues.filter(v=>v.type===type).length+'</small></button>').join("");
   $("#venue-grid").innerHTML=venues.filter(v=>v.type===state.venueType).map(v=>'<button class="venue-option '+v.type+'" data-venue="'+v.id+'" aria-pressed="'+(v.id===state.venue)+'"><strong>'+esc(v.name)+'</strong><span class="venue-type-label">'+(v.type==="beach"?"BEACH GROUND":"GREEN STADIUM")+'</span><span>'+esc(v.city)+'</span>'+(v.id===state.venue?"<b>✓</b>":"")+"</button>").join("");
   $("#over-options").innerHTML=[5,10,20,30,50].map(n=>'<button class="choice-button" data-overs="'+n+'" aria-pressed="'+(n===state.overs)+'">'+n+" overs</button>").join("");
   const tossInfo=$("#setup-toss-preview");
-  if(tossInfo){const caps=state.sideTeams.map(id=>teamById[id].captain||teamById[id].players[0]||"Captain");tossInfo.innerHTML="<strong>"+esc(caps[0])+" <span>vs</span> "+esc(caps[1])+'</strong><small>Heads or tails · toss winner chooses bat or bowl</small>';}
+  if(tossInfo){const caps=state.sideTeams.map(id=>id==="AUCTION"?(currentMembers(id).find(p=>p.captain)?.name||currentMembers(id)[0]?.name||"Auction Captain"):(teamById[id].captain||teamById[id].players[0]||"Captain"));tossInfo.innerHTML="<strong>"+esc(caps[0])+" <span>vs</span> "+esc(caps[1])+'</strong><small>Heads or tails · toss winner chooses bat or bowl</small>';}
   $("#setup-error").textContent="";
   renderResumeCard();saveLocalData();
 }
@@ -202,11 +212,11 @@ function renderSquads(){
   $("#squad-pool-options").innerHTML=(hasCurrent?'<button class="pool-tab" data-squad-pool="current" aria-pressed="'+(state.squadPool==="current")+'">CURRENT · ICC 2026</button>':"")+(hasLegends?'<button class="pool-tab" data-squad-pool="legends" aria-pressed="'+(state.squadPool==="legends")+'">LEGENDS · ALL ERAS</button>':"");
   const pool=state.squadPool==="current"?currentMembers(active.id):legendMembers(active.id);
   const chosen=new Set(state.sideLineups[side].map(p=>p.key));
-  $("#squad-explainer").textContent=state.squadPool==="current"?"Updated international squad. Select 11 for this match.":active.id==="LEG"?"Pick a World Legends XI from greats across international cricket history.":"Retired greats are extra roster choices; combine them with current players to make your XI.";
+  $("#squad-explainer").textContent=active.id==="AUCTION"?"Your local auction purchases. Choose 11 for the match.":state.squadPool==="current"?"Updated international squad. Select 11 for this match.":active.id==="LEG"?"Pick a World Legends XI from greats across international cricket history.":"Retired greats are extra roster choices; combine them with current players to make your XI.";
   $("#squad-list").innerHTML=pool.length?pool.map((p,i)=>{
     const selected=chosen.has(p.key),n=state.sideLineups[side].findIndex(x=>x.key===p.key)+1;
     const desc=p.era==="legend"&&active.id==="LEG"?p.flag+" "+p.country+" · LEGEND":p.era==="legend"?"RETRO LEGEND":"2026 SQUAD · "+String(i+1).padStart(2,"0");
-    return '<button class="player-option" data-player-key="'+esc(p.key)+'" aria-pressed="'+selected+'"><span class="player-check">'+(selected?"✓":"")+'</span><span class="player-info"><strong>'+esc(p.name)+(p.captain?" · CAPTAIN":"")+'</strong><small>'+esc(desc)+'</small></span><span class="player-era">'+(selected?"XI "+n:p.era.toUpperCase())+"</span></button>";
+    return '<div class="player-row"><button class="player-option" data-player-key="'+esc(p.key)+'" aria-pressed="'+selected+'"><span class="player-check">'+(selected?"✓":"")+'</span><span class="player-info"><strong>'+esc(p.name)+(p.captain?" · CAPTAIN":"")+'</strong><small>'+esc(desc)+'</small></span><span class="player-era">'+(selected?"XI "+n:p.era.toUpperCase())+'</span></button><button class="player-profile-button" data-profile-key="'+esc(p.key)+'" aria-label="View Tidebreak gameplay profile for '+esc(p.name)+'">PROFILE</button></div>';
   }).join(""):'<div class="empty-roster"><strong>No legends listed.</strong><span>Choose World Legends to select from the international all-time pool.</span></div>';
   const n=state.sideLineups[side].length;
   $("#squad-count-note").textContent=n+" of 11 selected · "+active.name;
@@ -222,6 +232,103 @@ function togglePlayer(key){
   renderSquads();renderSetup();
 }
 function closeSquads(){$("#squad-modal").hidden=true;renderSetup();}
+
+function playerProfile(player){
+  let hash=2166136261;for(const ch of String(player.sourceKey||player.key)){hash^=ch.charCodeAt(0);hash=Math.imul(hash,16777619);}
+  const n=hash>>>0,roles=["Top-order batter","Power hitter","Batting all-rounder","Fast bowler","Spin bowler","Wicketkeeper-batter"],role=roles[n%roles.length];
+  const batting=58+(n%39),power=55+((n>>>5)%44),control=57+((n>>>10)%42),fielding=55+((n>>>15)%44);
+  const bowling=(role==="Fast bowler"||role==="Spin bowler"||role==="Batting all-rounder")?62+((n>>>20)%35):32+((n>>>20)%43);
+  const speed=role==="Fast bowler"?128+((n>>>8)%21):role==="Spin bowler"?72+((n>>>8)%36):null;
+  const hand=(n&1)?"Right-hand":"Left-hand",style=role==="Fast bowler"?"Seam attack":role==="Spin bowler"?"Flight & turn":role==="Batting all-rounder"?"Bat and bowl":role==="Wicketkeeper-batter"?"Keeper-batter":power>82?"Boundary hitter":"Placement batter";
+  const overall=Math.round((batting+power+control+fielding+bowling)/5);
+  return {role,batting,power,control,fielding,bowling,speed,hand,style,overall};
+}
+function findPlayer(key){if(auctionPlayerByKey[key])return auctionPlayerByKey[key];for(const roster of Object.values(state.auction?.rosters||{})){const player=roster.find(p=>p.key===key);if(player)return player;}return null;}
+function profileMeter(label,value){return '<div class="profile-meter"><span>'+label+'</span><b>'+value+'</b><i><em style="width:'+value+'%"></em></i></div>';}
+function renderProfile(key){
+  const p=findPlayer(key);if(!p)return;
+  const ratings=playerProfile(p),team=teamById[p.sourceTeam||p.team],origin=p.era==="legend"?"LEGEND ERA":"INTERNATIONAL ROSTER";
+  $("#profile-title").textContent=p.name;
+  $("#profile-detail").innerHTML='<div class="profile-identity"><span class="profile-flag">'+esc(team?.flag||"🌍")+'</span><div><strong>'+esc(team?.name||p.country||"International")+'</strong><small>'+origin+' · TIDEBREAK GAME PROFILE</small></div><b class="profile-overall">'+ratings.overall+'<small>OVR</small></b></div><div class="profile-archetype"><span>GAME ROLE</span><strong>'+ratings.role+'</strong><small>'+ratings.hand+' · '+ratings.style+'</small></div><div class="profile-ratings">'+profileMeter("Batting",ratings.batting)+profileMeter("Power",ratings.power)+profileMeter("Control",ratings.control)+profileMeter("Bowling",ratings.bowling)+profileMeter("Fielding",ratings.fielding)+'</div><div class="profile-speed"><span>SIMULATION DELIVERY BAND</span><strong>'+(ratings.speed?ratings.speed+" km/h":"Varied · role balanced")+'</strong></div><p class="profile-disclaimer">These Tidebreak gameplay ratings and speed bands are generated for game balance. They are not official player statistics or measured real-world speeds.</p>';
+  $("#profile-modal").hidden=false;
+}
+function closeProfile(){$("#profile-modal").hidden=true;}
+function auctionClubById(id){return auctionClubs.find(c=>c.id===id)||auctionClubs[0];}
+function auctionRoster(){return state.auction?.rosters?.[state.auction.clubId]||[];}
+function auctionCurrentPlayer(){
+  const a=state.auction;if(!a||!Array.isArray(a.lots))return null;
+  return auctionPlayerByKey[a.lots[a.lotIndex]]||null;
+}
+function auctionBasePrice(player){
+  return Math.max(.5,Math.round((playerProfile(player).overall-48)/10*2)/2);
+}
+function auctionCostLabel(amount){return "₹"+Number(amount||0).toFixed(1)+" Cr";}
+function renderAuction(){
+  const a=state.auction,active=!!a,clubSelect=$("#auction-club-select"),start=$("#auction-start-panel"),board=$("#auction-board");
+  clubSelect.innerHTML=auctionClubs.map(c=>'<option value="'+c.id+'">'+c.flag+" "+esc(c.name)+"</option>").join("");
+  clubSelect.value=active?a.clubId:clubSelect.value||auctionClubs[0].id;
+  start.hidden=active;board.hidden=!active;
+  if(!active)return;
+  const lot=auctionCurrentPlayer(),club=auctionClubById(a.clubId),profile=lot?playerProfile(lot):null;
+  const progress=Math.min(a.lotIndex+1,a.lots.length);
+  $("#auction-club-name").textContent=club.flag+" "+club.name;
+  $("#auction-budget").textContent=auctionCostLabel(a.budgets[a.clubId]);
+  $("#auction-progress").textContent="LOT "+String(progress).padStart(3,"0")+" / "+a.lots.length;
+  $("#auction-squad-count").textContent=(a.rosters[a.clubId]||[]).length+" / 15 players";
+  $("#auction-rivals").innerHTML=auctionClubs.filter(c=>c.id!==a.clubId).map(c=>'<span>'+c.flag+" "+esc(c.name)+'<b>'+auctionCostLabel(a.budgets[c.id])+'</b></span>').join("");
+  $("#auction-message").textContent=a.message||"Bid for a player, then confirm the hammer.";
+  if(lot&&profile){
+    $("#auction-lot").innerHTML='<div class="auction-lot-top"><span>'+esc(teamById[lot.team]?.flag||lot.flag||"🌍")+' '+esc(teamById[lot.team]?.name||lot.country||"International")+' · '+(lot.era==="legend"?"LEGEND ERA":"CURRENT ERA")+'</span><button class="player-profile-button" data-profile-key="'+esc(lot.key)+'">FULL PROFILE</button></div><h3>'+esc(lot.name)+'</h3><div class="auction-player-tags"><span>'+profile.role+'</span><span>'+profile.overall+' OVR</span><span>GAME TUNING</span></div><div class="auction-price-row"><span>BASE PRICE <b>'+auctionCostLabel(auctionBasePrice(lot))+'</b></span><span>TOP BID <b>'+auctionCostLabel(a.bid)+'</b></span><span>LEADER <b>'+(a.highBidder?esc(auctionClubById(a.highBidder).name):"—")+'</b></span></div>';
+  }else $("#auction-lot").innerHTML='<h3>All available lots completed</h3>';
+  const nextBid=a.bid>0?a.bid+.5:lot?auctionBasePrice(lot):0;
+  $("#auction-bid-button").textContent="BID "+auctionCostLabel(nextBid);
+  $("#auction-bid-button").disabled=!lot||a.status!=="open"||a.lotClosed||nextBid>a.budgets[a.clubId];
+  $("#auction-hammer-button").textContent=a.status==="complete"?"AUCTION COMPLETE":a.lotClosed?"NEXT LOT":a.highBidder===a.clubId?"HAMMER · BUY PLAYER":"PASS · HAMMER";
+  $("#auction-hammer-button").disabled=a.status==="complete";
+  $("#use-auction-xi").disabled=(a.rosters[a.clubId]||[]).length<11;
+}
+function openAuction(){renderAuction();$("#auction-modal").hidden=false;}
+function startAuction(clubId){
+  if(state.sideTeams.includes("AUCTION")){showToast("Switch your match side away from Tidebreak Auction XI before starting a new auction.");return;}
+  const club=auctionClubs.some(c=>c.id===clubId)?clubId:auctionClubs[0].id;
+  const lots=auctionPlayers.map(p=>p.key);for(let i=lots.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[lots[i],lots[j]]=[lots[j],lots[i]];}
+  state.auction={clubId:club,budgets:Object.fromEntries(auctionClubs.map(c=>[c.id,100])),rosters:Object.fromEntries(auctionClubs.map(c=>[c.id,[]])),lots:lots.slice(0,100),lotIndex:0,bid:0,highBidder:null,lotClosed:false,status:"open",message:"Auction opened. Build a squad of up to 15 players; 11 can enter a match."};
+  fillSelects();renderSetup();renderAuction();saveLocalData();
+}
+function auctionBid(){
+  const a=state.auction,lot=auctionCurrentPlayer();if(!a||!lot||a.status!=="open"||a.lotClosed)return;
+  const amount=a.bid>0?a.bid+.5:auctionBasePrice(lot);if(amount>a.budgets[a.clubId]){showToast("That bid is above your remaining purse.");return;}
+  a.bid=amount;a.highBidder=a.clubId;
+  const rating=playerProfile(lot).overall;
+  const interested=auctionClubs.filter(c=>c.id!==a.clubId&&a.budgets[c.id]>=amount+.5&&(a.rosters[c.id]||[]).length<15);
+  if(interested.length&&Math.random()<.13+Math.max(0,rating-60)/150){
+    const rival=randomItem(interested);a.bid=Math.min(amount+.5,a.budgets[rival.id]);a.highBidder=rival.id;
+    a.message=rival.name+" has raised the paddle. Bid again or let the lot go.";
+  }else a.message="You are leading at "+auctionCostLabel(a.bid)+". Lock in the player or raise the paddle.";
+  renderAuction();saveLocalData();
+}
+function advanceAuction(){
+  const a=state.auction;if(!a)return;
+  if(a.lotIndex>=a.lots.length-1){a.status="complete";a.message="The available player lots are complete.";return;}
+  a.lotIndex++;a.bid=0;a.highBidder=null;a.lotClosed=false;a.message="Next player is on the block.";
+}
+function auctionHammer(){
+  const a=state.auction;if(!a||a.status==="complete")return;
+  if(a.lotClosed){advanceAuction();renderAuction();saveLocalData();return;}
+  const lot=auctionCurrentPlayer();
+  if(a.highBidder&&lot){
+    const buyer=a.highBidder,amount=a.bid;
+    if(a.budgets[buyer]<amount||a.rosters[buyer].length>=15){a.message="Bid could not be settled; the lot is unsold.";a.highBidder=null;a.bid=0;}
+    else{
+      a.budgets[buyer]=Math.max(0,a.budgets[buyer]-amount);a.rosters[buyer].push({...lot,key:"AUC:"+buyer+":"+lot.key,sourceKey:lot.key,sourceTeam:lot.team,team:"AUCTION",auctionClub:buyer});
+      a.message=auctionClubById(buyer).name+" signs "+lot.name+" for "+auctionCostLabel(amount)+".";
+    }
+  }else a.message="No bid. The player goes unsold.";
+  if(a.rosters[a.clubId].length>=15||a.lotIndex>=a.lots.length-1)a.status="complete";
+  else a.lotClosed=true;
+  renderAuction();saveLocalData();
+}
+function closeAuction(){$("#auction-modal").hidden=true;saveLocalData();renderSetup();}
 function showToast(message){
   const toast=$("#toast");toast.textContent=message;toast.classList.add("show");
   clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>toast.classList.remove("show"),2200);
@@ -392,24 +499,37 @@ function drawBeachGround(ctx){
   ctx.fillStyle="rgba(255,255,255,.24)";for(let i=0;i<7;i++){ctx.beginPath();ctx.ellipse(70+i*190,360+(i%2)*20,95,8,0,0,Math.PI*2);ctx.fill();}
   ctx.fillStyle="#9b7548";ctx.fillRect(420,330,360,16);ctx.fillStyle="#f7e3b9";ctx.fillRect(565,280,70,135);
 }
-function drawPlayerFigure(ctx,x,y,scale,color,pose){
+function drawPlayerFigure(ctx,x,y,scale,color,pose,motion){
+  const t=performance.now()/135+(motion||0),step=Math.sin(t),reach=Math.cos(t);
   ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);
-  ctx.fillStyle="rgba(13,41,39,.2)";ctx.beginPath();ctx.ellipse(0,1,9,3,0,0,Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.arc(0,-26,4.5,0,Math.PI*2);ctx.fillStyle="#e4b28a";ctx.fill();
-  ctx.strokeStyle=color;ctx.lineWidth=7;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(0,-21);ctx.lineTo(0,-10);ctx.stroke();
-  ctx.lineWidth=3.4;ctx.beginPath();
-  if(pose==="run"){ctx.moveTo(0,-19);ctx.lineTo(-7,-13);ctx.moveTo(0,-19);ctx.lineTo(7,-25);}
+  const dive=pose==="dive",crouch=pose==="field",lean=dive?10:pose==="run"?3:pose==="swing"||pose==="follow"?4:0;
+  ctx.fillStyle="rgba(13,41,39,.2)";ctx.beginPath();ctx.ellipse(0,1,dive?13:9,3,0,0,Math.PI*2);ctx.fill();
+  const headX=dive?7:lean,headY=dive?-13:crouch?-25:-26;
+  ctx.beginPath();ctx.arc(headX,headY,4.5,0,Math.PI*2);ctx.fillStyle="#e4b28a";ctx.fill();
+  ctx.strokeStyle=color;ctx.lineWidth=7;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(dive?-5:lean,-21);ctx.lineTo(dive?5:0,dive?-12:-10);ctx.stroke();
+  ctx.strokeStyle=color;ctx.lineWidth=3.4;ctx.beginPath();
+  if(pose==="run"){ctx.moveTo(0,-19);ctx.lineTo(-8+step*3,-14);ctx.moveTo(0,-19);ctx.lineTo(8-step*3,-25);}
+  else if(pose==="bowl"){ctx.moveTo(0,-19);ctx.lineTo(-8,-12);ctx.moveTo(0,-19);ctx.lineTo(7,-30+reach*3);}
+  else if(pose==="load"){ctx.moveTo(0,-19);ctx.lineTo(-10,-25);ctx.moveTo(0,-19);ctx.lineTo(8,-17);}
   else if(pose==="swing"){ctx.moveTo(0,-19);ctx.lineTo(8,-25);ctx.moveTo(0,-19);ctx.lineTo(12,-14);}
+  else if(pose==="follow"){ctx.moveTo(0,-19);ctx.lineTo(12,-24);ctx.moveTo(0,-19);ctx.lineTo(11,-12);}
+  else if(pose==="catch"||pose==="celebrate"){ctx.moveTo(0,-19);ctx.lineTo(-9,-31);ctx.moveTo(0,-19);ctx.lineTo(9,-31);}
+  else if(dive){ctx.moveTo(0,-18);ctx.lineTo(15,-23);ctx.moveTo(0,-18);ctx.lineTo(17,-17);}
   else{ctx.moveTo(0,-19);ctx.lineTo(-7,-12);ctx.moveTo(0,-19);ctx.lineTo(7,-12);}
   ctx.stroke();
   ctx.strokeStyle="#243d3d";ctx.lineWidth=3.7;ctx.beginPath();
-  if(pose==="run"){ctx.moveTo(0,-10);ctx.lineTo(-6,-4);ctx.moveTo(0,-10);ctx.lineTo(7,-2);}
+  if(pose==="run"){ctx.moveTo(0,-10);ctx.lineTo(-7+step*5,-4);ctx.moveTo(0,-10);ctx.lineTo(7-step*5,-2);}
+  else if(dive){ctx.moveTo(4,-14);ctx.lineTo(-4,-10);ctx.moveTo(4,-14);ctx.lineTo(12,-8);}
   else{ctx.moveTo(0,-10);ctx.lineTo(-4,0);ctx.moveTo(0,-10);ctx.lineTo(4,0);}
   ctx.stroke();
-  if(pose==="bat"||pose==="swing"){ctx.strokeStyle="#f2dfb9";ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(pose==="swing"?11:7,pose==="swing"?-15:-12);ctx.lineTo(pose==="swing"?20:14,pose==="swing"?-29:-1);ctx.stroke();}
+  if(pose==="bat"||pose==="load"||pose==="swing"||pose==="follow"){
+    ctx.strokeStyle="#f2dfb9";ctx.lineWidth=2.5;ctx.beginPath();
+    const batX=pose==="swing"||pose==="follow"?11:7,batY=pose==="swing"?-15:pose==="follow"?-19:-12;
+    ctx.moveTo(batX,batY);ctx.lineTo(pose==="swing"?21:pose==="follow"?19:14,pose==="swing"?-29:pose==="follow"?-31:-1);ctx.stroke();
+  }
   ctx.restore();
 }
-function drawGreenStadium(ctx,venue,runProgress,batterPose){
+function drawGreenStadium(ctx,venue,runProgress,batterPose,fieldPose){
   const sky=ctx.createLinearGradient(0,0,0,675);sky.addColorStop(0,venue.sky);sky.addColorStop(.55,"#e4eff0");sky.addColorStop(.56,"#438d65");sky.addColorStop(1,"#176542");ctx.fillStyle=sky;ctx.fillRect(0,0,1200,675);
   ctx.fillStyle=venue.sun;ctx.beginPath();ctx.arc(1020,90,38,0,Math.PI*2);ctx.fill();
   ctx.fillStyle="rgba(255,255,255,.55)";[[190,85,80],[380,120,56],[790,75,66]].forEach(([x,y,r])=>{ctx.beginPath();ctx.ellipse(x,y,r,13,0,0,Math.PI*2);ctx.fill();});
@@ -428,10 +548,10 @@ function drawGreenStadium(ctx,venue,runProgress,batterPose){
   ctx.fillStyle="#b6c99a";ctx.beginPath();ctx.moveTo(582,364);ctx.lineTo(618,364);ctx.lineTo(636,612);ctx.lineTo(564,612);ctx.closePath();ctx.fill();
   ctx.strokeStyle="#f9f6e6";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(578,382);ctx.lineTo(622,382);ctx.moveTo(541,597);ctx.lineTo(659,597);ctx.stroke();
   [[600,374],[600,590]].forEach(([x,y])=>{ctx.strokeStyle="#fff9e8";ctx.lineWidth=2;for(let i=-1;i<=1;i++){ctx.beginPath();ctx.moveTo(x+i*6,y);ctx.lineTo(x+i*6,y-17);ctx.stroke();}ctx.beginPath();ctx.moveTo(x-10,y-7);ctx.lineTo(x+10,y-7);ctx.stroke();});
-  [[370,438],[465,520],[735,500],[850,420],[300,518],[930,540],[485,405],[715,410]].forEach((p,i)=>drawPlayerFigure(ctx,p[0],p[1],i<4?.8:.67,i%2?"#f2f0e5":"#e9c95e","field"));
-  const bowlerX=535+clamp(runProgress||0,0,1)*65;drawPlayerFigure(ctx,bowlerX,425,.82,"#e9c95e",runProgress&&runProgress<.8?"run":"field");
+  [[370,438],[465,520],[735,500],[850,420],[300,518],[930,540],[485,405],[715,410]].forEach((p,i)=>drawPlayerFigure(ctx,p[0],p[1],i<4?.8:.67,i%2?"#f2f0e5":"#e9c95e",fieldPose&&i===0?fieldPose:"field",i));
+  const bowlerX=535+clamp(runProgress||0,0,1)*65;drawPlayerFigure(ctx,bowlerX,425,.82,"#e9c95e",runProgress?(runProgress<.56?"run":runProgress<.77?"bowl":"follow"):"field");
   drawPlayerFigure(ctx,600,535,1.03,"#f2f0e5",batterPose||"bat");
-  drawPlayerFigure(ctx,587,388,.72,"#f2f0e5","field");
+  drawPlayerFigure(ctx,587,388,.72,"#f2f0e5",fieldPose==="catch"?"catch":"field");
   ctx.fillStyle="rgba(15,44,39,.48)";ctx.fillRect(0,0,1200,48);
   ctx.fillStyle="#f7f4e8";ctx.font="500 13px sans-serif";ctx.fillText(venue.name.toUpperCase()+" · MATCH DAY",28,30);
 }
@@ -441,19 +561,25 @@ function drawScene(){
   const dpr=Math.min(window.devicePixelRatio||1,2),w=rect.width,h=rect.height;
   if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
   const ctx=canvas.getContext("2d");ctx.setTransform(canvas.width/1200,0,0,canvas.height/675,0,0);
-  const game=state.game,venue=venueById[game?.venue||state.venue],running=game&&(game.phase==="bat-flight"||game.phase==="bowl-meter"),elapsed=running?performance.now()-game.startedAt:0,flightActive=game?.phase==="shot-flight"&&game.ballFlight;
-  if(venue?.type==="green")drawGreenStadium(ctx,venue,running?clamp(elapsed/900,0,1):1,running&&game.phase==="bat-flight"&&elapsed>=game.delivery.target?"swing":"bat");
+  const game=state.game,venue=venueById[game?.venue||state.venue],running=game&&(game.phase==="bat-flight"||game.phase==="bowl-meter"),elapsed=running?performance.now()-game.startedAt:0,flightActive=game?.phase==="shot-flight"&&game.ballFlight,actionActive=running||flightActive;
+  const ballProgress=flightActive?clamp((performance.now()-game.ballFlight.startedAt)/game.ballFlight.duration,0,1):0;
+  const batterPose=running&&game.phase==="bat-flight"?(elapsed<game.delivery.target-180?"load":elapsed<game.delivery.target+220?"swing":"follow"):flightActive?"follow":"bat";
+  const bowlerProgress=running?clamp(elapsed/game.delivery.duration,0,1):1;
+  const fieldPose=flightActive?(game.ballFlight.isOut&&ballProgress>.72?"catch":ballProgress>.8?"dive":"run"):null;
+  if(venue?.type==="green")drawGreenStadium(ctx,venue,running?clamp(elapsed/900,0,1):0,batterPose,fieldPose);
   else drawBeachGround(ctx);
-  if(venue?.type==="beach"&&running){
-    const p=clamp(elapsed/game.delivery.duration,0,1);
-    drawPlayerFigure(ctx,540+clamp(elapsed/900,0,1)*60,425,.82,"#e9c95e",p<.72?"run":"field");
-    drawPlayerFigure(ctx,600,535,1.03,"#f2f0e5",game.phase==="bat-flight"&&elapsed>=game.delivery.target?"swing":"bat");
+  if(venue?.type==="beach"&&actionActive){
+    const bp=running?bowlerProgress:1;
+    drawPlayerFigure(ctx,540+clamp(bp/.8,0,1)*60,425,.82,"#e9c95e",bp<.56?"run":bp<.78?"bowl":"follow");
+    drawPlayerFigure(ctx,600,535,1.03,"#f2f0e5",batterPose);
+    drawPlayerFigure(ctx,600,384,.72,"#f2f0e5",fieldPose==="catch"?"catch":"field");
   }
   if(flightActive){
-    const f=game.ballFlight,p=clamp((performance.now()-f.startedAt)/f.duration,0,1),distance=f.runs===6?470:f.runs===4?390:f.runs===3?300:f.runs===2?220:f.runs===1?125:70;
+    const f=game.ballFlight,p=ballProgress,distance=f.runs===6?470:f.runs===4?390:f.runs===3?300:f.runs===2?220:f.runs===1?125:70;
     const tx=600+Math.cos(f.angle)*distance,ty=535+Math.sin(f.angle)*distance,arc=Math.sin(Math.PI*p)*(f.loft?150:50),x=600+(tx-600)*p,y=535+(ty-535)*p-arc;
-    const fielderStart=tx<600?[835,425]:[365,435];
-    if(p>.12)drawPlayerFigure(ctx,fielderStart[0]+(x-fielderStart[0])*clamp((p-.12)*1.25,0,1),fielderStart[1]+(y-fielderStart[1])*clamp((p-.12)*1.25,0,1),.82,"#f2f0e5","run");
+    const fielderStart=tx<600?[835,425]:[365,435],fieldProgress=clamp((p-.12)*1.25,0,1);
+    if(p>.12)drawPlayerFigure(ctx,fielderStart[0]+(x-fielderStart[0])*fieldProgress,fielderStart[1]+(y-fielderStart[1])*fieldProgress,.82,"#f2f0e5",fieldPose,p*4);
+    drawPlayerFigure(ctx,tx<600?350:850,435,.68,"#e9c95e",p>.83?"run":"field",2);
     ctx.strokeStyle="rgba(255,248,214,.74)";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(x-5,y+18);ctx.lineTo(x,y);ctx.stroke();ctx.fillStyle=f.isOut?"#e87358":"#fff8e7";ctx.beginPath();ctx.arc(x,y,Math.max(3,9-p*5),0,Math.PI*2);ctx.fill();
     requestAnimationFrame(drawScene);
   }
@@ -506,6 +632,8 @@ function renderApp(){
   $("#team-b-select").addEventListener("change",e=>setTeam(1,e.target.value));
   $("#start-match").addEventListener("click",tossOpen);
   $("#squad-modal").addEventListener("click",e=>{if(e.target===$("#squad-modal"))closeSquads();});
+  $("#profile-modal").addEventListener("click",e=>{if(e.target===$("#profile-modal"))closeProfile();});
+  $("#auction-modal").addEventListener("click",e=>{if(e.target===$("#auction-modal"))closeAuction();});
   $("#control-settings-modal").addEventListener("click",e=>{if(e.target===$("#control-settings-modal"))closeControlSettings();});
   let origin=null;const field=$("#match-ground-card");
   field.addEventListener("pointerdown",e=>{const game=state.game,battingSwipe=state.controls.mode==="swipe"&&game?.phase==="bat-flight",bowlingSwipe=state.controls.bowlMode==="swipe"&&game?.phase==="bowl-meter";if(!battingSwipe&&!bowlingSwipe)return;origin={x:e.clientX,y:e.clientY,id:e.pointerId,kind:battingSwipe?"bat":"bowl"};try{field.setPointerCapture(e.pointerId);}catch(error){}});
@@ -519,6 +647,7 @@ function renderApp(){
     if(button.dataset.venueType){if(["beach","green"].includes(button.dataset.venueType)){state.venueType=button.dataset.venueType;if(!venues.some(v=>v.id===state.venue&&v.type===state.venueType))state.venue=venues.find(v=>v.type===state.venueType)?.id||state.venue;renderSetup();}return;}
     if(button.dataset.squadSide!==undefined){state.squadSide=Number(button.dataset.squadSide);state.squadPool=state.sideTeams[state.squadSide]==="LEG"?"legends":"current";renderSquads();return;}
     if(button.dataset.squadPool){state.squadPool=button.dataset.squadPool;renderSquads();return;}
+    if(button.dataset.profileKey){renderProfile(button.dataset.profileKey);return;}
     if(button.dataset.playerKey){togglePlayer(button.dataset.playerKey);return;}
     if(button.dataset.tossCall){resolveTossCall(button.dataset.tossCall);return;}
     if(button.dataset.tossChoice){chooseTossDecision(button.dataset.tossChoice);return;}
@@ -532,6 +661,14 @@ function renderApp(){
     switch(button.dataset.command){
       case "squads":openSquads(Number(button.dataset.side||0));break;
       case "close-squads":closeSquads();break;
+      case "open-auction":openAuction();break;
+      case "close-auction":closeAuction();break;
+      case "start-auction":startAuction($("#auction-club-select").value);break;
+      case "new-auction":startAuction($("#auction-club-select").value);break;
+      case "auction-bid":auctionBid();break;
+      case "auction-hammer":auctionHammer();break;
+      case "use-auction-xi":if(auctionRoster().length>=11){state.sideTeams[0]="AUCTION";state.sideLineups[0]=auctionRoster().slice(0,11).map(p=>({...p}));fillSelects();closeAuction();showToast("Your auction XI is ready for the next match.");}else showToast("Sign at least 11 players first.");break;
+      case "close-profile":closeProfile();break;
       case "save-squads":if(state.sideLineups[state.squadSide].length===11)closeSquads();else showToast("Select exactly 11 players before saving.");break;
       case "home":openHome();break;
       case "resume":if(state.game){$("#setup-screen").hidden=true;$("#game-screen").hidden=false;renderMatch();}break;
@@ -546,8 +683,8 @@ function renderApp(){
     }
   });
   document.addEventListener("keydown",e=>{
-    if(e.key==="Escape"){if(!$("#squad-modal").hidden)closeSquads();if(!$("#control-settings-modal").hidden)closeControlSettings();if(!$("#toss-modal").hidden){state.toss=null;renderToss();renderSetup();}return;}
-    if(!state.game||!$("#squad-modal").hidden||!$("#control-settings-modal").hidden||!$("#toss-modal").hidden)return;
+    if(e.key==="Escape"){if(!$("#squad-modal").hidden)closeSquads();if(!$("#profile-modal").hidden)closeProfile();if(!$("#auction-modal").hidden)closeAuction();if(!$("#control-settings-modal").hidden)closeControlSettings();if(!$("#toss-modal").hidden){state.toss=null;renderToss();renderSetup();}return;}
+    if(!state.game||!$("#squad-modal").hidden||!$("#profile-modal").hidden||!$("#auction-modal").hidden||!$("#control-settings-modal").hidden||!$("#toss-modal").hidden)return;
     if(e.code==="Space"){e.preventDefault();if(state.game.phase==="bowl-meter")releaseBowl();else if(state.game.phase==="ready"||state.game.phase==="result")startDelivery();return;}
     const shots={"1":"drive","2":"loft","3":"cut","4":"defend"};if(shots[e.key]&&state.game.phase==="bat-flight")playShot(shots[e.key],performance.now()-state.game.startedAt);
   });
