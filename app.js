@@ -80,7 +80,7 @@ const state={
   sideTeams:["IND","AUS"],
   sideLineups:[firstXI("IND"),firstXI("AUS")],
   overs:5,venue:"TIDEBREAK_BAY",venueType:"beach",squadSide:0,squadPool:"current",game:null,toss:null,
-  controls:{mode:"swipe",shotMap:"balanced",sensitivity:1,timingAssist:true,proMode:false},
+  controls:{mode:"swipe",shotMap:"balanced",sensitivity:1,timingAssist:true,proMode:false,bowlMode:"tap"},
   matchHistory:[]
 };
 const SAVE_KEY="tidebreak.local.v1";
@@ -114,6 +114,7 @@ function loadLocalData(){
     if(["beach","green"].includes(saved.venueType))state.venueType=saved.venueType;
     if(saved.controls&&typeof saved.controls==="object"){
       if(["swipe","tap"].includes(saved.controls.mode))state.controls.mode=saved.controls.mode;
+      if(["tap","swipe"].includes(saved.controls.bowlMode))state.controls.bowlMode=saved.controls.bowlMode;
       if(["balanced","precision","power"].includes(saved.controls.shotMap))state.controls.shotMap=saved.controls.shotMap;
       if(Number.isFinite(Number(saved.controls.sensitivity)))state.controls.sensitivity=clamp(Number(saved.controls.sensitivity),.6,1.6);
       if(typeof saved.controls.timingAssist==="boolean")state.controls.timingAssist=saved.controls.timingAssist;
@@ -345,7 +346,7 @@ function renderControls(){
     root.innerHTML='<div class="play-overline">FULL TIME · RESULT</div><h2>'+esc(game.result||"Match complete")+'</h2><p>'+esc(game.event)+'</p><div class="control-actions"><button class="primary-button" data-command="rematch">REMATCH · NEW TOSS <span>↗</span></button><button class="text-button" data-command="home">BACK TO SETUP</button></div>';return;
   }
   if(game.phase==="bat-flight"){
-    root.innerHTML='<div class="play-overline">YOUR SIDE BATTING · '+esc(striker?.name||"Batter")+' ON STRIKE · '+(state.controls.proMode?"PRO MODE":"SWIPE BATTING")+'</div><h2>'+(state.controls.mode==="swipe"?"Swipe the pitch. Time your shot.":"Watch it down. Pick your shot.")+'</h2><p>The ball is on its way from '+esc(bowler?.name||"the bowler")+'. Swipe in a direction or tap a shot.</p><div class="shot-grid">'+[["drive","Drive","→"],["loft","Loft","↑"],["cut","Cut","←"],["defend","Defend","↓"]].map(x=>'<button class="shot-button" data-shot="'+x[0]+'">'+x[1]+'<b>'+(state.controls.mode==="swipe"?"SWIPE ":"KEY ")+x[2]+'</b></button>').join("")+'</div><div class="next-ball-row"><span class="hot-key">'+state.controls.shotMap.toUpperCase()+" SHOT MAP · BALL "+(inn.legal+1)+'</span><span class="hot-key">SENSITIVITY '+state.controls.sensitivity.toFixed(1)+'×</span></div>';
+    root.innerHTML='<div class="play-overline">YOUR SIDE BATTING · '+esc(striker?.name||"Batter")+' ON STRIKE · '+(state.controls.proMode?"PRO MODE":"SWIPE BATTING")+'</div><h2>'+(state.controls.mode==="swipe"?"Swipe in a direction and release before contact.":"Watch the ball and tap a shot.")+'</h2><p>The ball is on its way from '+esc(bowler?.name||"the bowler")+'. '+(state.controls.mode==="swipe"?"Swipe in a direction to choose your shot.":"Tap a shot control to respond.")+'</p><div class="shot-grid">'+[["drive","Drive","→"],["loft","Loft","↑"],["cut","Cut","←"],["defend","Defend","↓"]].map(x=>'<button class="shot-button" data-shot="'+x[0]+'">'+x[1]+'<b>'+(state.controls.mode==="swipe"?"SWIPE ":"KEY ")+x[2]+'</b></button>').join("")+'</div><div class="next-ball-row"><span class="hot-key">'+state.controls.shotMap.toUpperCase()+" SHOT MAP · BALL "+(inn.legal+1)+'</span><span class="hot-key">SENSITIVITY '+state.controls.sensitivity.toFixed(1)+'×</span></div>';
     return;
   }
   if(game.phase==="shot-flight"){
@@ -481,10 +482,12 @@ function drawMenuScene(){
 function renderControlSettings(){
   const modal=$("#control-settings-modal");if(!modal)return;modal.hidden=false;
   modal.querySelectorAll("[data-control-mode]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.controlMode===state.controls.mode)));
+  modal.querySelectorAll("[data-bowl-mode]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.bowlMode===state.controls.bowlMode)));
+  const timingToggle=modal.querySelector('[data-control-toggle="timingAssist"]');if(timingToggle)timingToggle.disabled=state.controls.proMode;
   modal.querySelectorAll("[data-shot-map]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.shotMap===state.controls.shotMap)));
   modal.querySelectorAll("[data-control-toggle]").forEach(b=>{const on=Boolean(state.controls[b.dataset.controlToggle]);b.setAttribute("aria-pressed",String(on));b.textContent=on?"ON":"OFF";});
   $("#swipe-sensitivity").value=String(state.controls.sensitivity);$("#sensitivity-value").textContent=state.controls.sensitivity.toFixed(1)+"×";
-  $("#control-settings-note").textContent=state.controls.proMode?"Pro mode is on · no aim assist.":"Settings save on this device.";
+  $("#control-settings-note").textContent=state.controls.proMode?"Pro mode is on · timing assist is disabled.":"Control settings save on this device.";
 }
 function closeControlSettings(){$("#control-settings-modal").hidden=true;}
 function applySwipe(dx,dy){
@@ -505,8 +508,8 @@ function renderApp(){
   $("#squad-modal").addEventListener("click",e=>{if(e.target===$("#squad-modal"))closeSquads();});
   $("#control-settings-modal").addEventListener("click",e=>{if(e.target===$("#control-settings-modal"))closeControlSettings();});
   let origin=null;const field=$("#match-ground-card");
-  field.addEventListener("pointerdown",e=>{if(state.controls.mode!=="swipe"||state.game?.phase!=="bat-flight")return;origin={x:e.clientX,y:e.clientY,id:e.pointerId};try{field.setPointerCapture(e.pointerId);}catch(error){}});
-  field.addEventListener("pointerup",e=>{if(!origin||origin.id!==e.pointerId)return;const dx=e.clientX-origin.x,dy=e.clientY-origin.y;origin=null;applySwipe(dx,dy);});
+  field.addEventListener("pointerdown",e=>{const game=state.game,battingSwipe=state.controls.mode==="swipe"&&game?.phase==="bat-flight",bowlingSwipe=state.controls.bowlMode==="swipe"&&game?.phase==="bowl-meter";if(!battingSwipe&&!bowlingSwipe)return;origin={x:e.clientX,y:e.clientY,id:e.pointerId,kind:battingSwipe?"bat":"bowl"};try{field.setPointerCapture(e.pointerId);}catch(error){}});
+  field.addEventListener("pointerup",e=>{if(!origin||origin.id!==e.pointerId)return;const gesture=origin,dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;origin=null;if(gesture.kind==="bat")applySwipe(dx,dy);else if(Math.hypot(dx,dy)>=24/state.controls.sensitivity)releaseBowl();});
   field.addEventListener("pointercancel",()=>{origin=null;});
   $("#swipe-sensitivity").addEventListener("input",e=>{state.controls.sensitivity=clamp(Number(e.target.value),.6,1.6);$("#sensitivity-value").textContent=state.controls.sensitivity.toFixed(1)+"×";saveLocalData();});
   document.addEventListener("click",e=>{
@@ -520,11 +523,12 @@ function renderApp(){
     if(button.dataset.tossCall){resolveTossCall(button.dataset.tossCall);return;}
     if(button.dataset.tossChoice){chooseTossDecision(button.dataset.tossChoice);return;}
     if(button.dataset.controlMode){state.controls.mode=button.dataset.controlMode;renderMatch();renderControlSettings();saveLocalData();return;}
+    if(button.dataset.bowlMode){state.controls.bowlMode=button.dataset.bowlMode;renderControlSettings();saveLocalData();return;}
     if(button.dataset.shotMap){state.controls.shotMap=button.dataset.shotMap;renderMatch();renderControlSettings();saveLocalData();return;}
-    if(button.dataset.controlToggle){state.controls[button.dataset.controlToggle]=!state.controls[button.dataset.controlToggle];renderMatch();renderControlSettings();saveLocalData();return;}
+    if(button.dataset.controlToggle){const key=button.dataset.controlToggle;if(key==="timingAssist"&&state.controls.proMode)return;state.controls[key]=!state.controls[key];if(key==="proMode"&&state.controls.proMode)state.controls.timingAssist=false;renderMatch();renderControlSettings();saveLocalData();return;}
     if(button.dataset.bowlType){state.game.bowlType=button.dataset.bowlType;renderMatch();return;}
     if(button.dataset.bowlLength){state.game.bowlLength=button.dataset.bowlLength;renderMatch();return;}
-    if(button.dataset.shot){playShot(button.dataset.shot,performance.now()-(state.game?.startedAt||performance.now()));return;}
+    if(button.dataset.shot){if(state.controls.mode==="tap")playShot(button.dataset.shot,performance.now()-(state.game?.startedAt||performance.now()));else showToast("Swipe in the match view, or switch to Tap controls.");return;}
     switch(button.dataset.command){
       case "squads":openSquads(Number(button.dataset.side||0));break;
       case "close-squads":closeSquads();break;
