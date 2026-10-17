@@ -29,3 +29,7 @@ The 2026 squad snapshot follows the [ICC’s final squad announcement](https://w
 ## Prototype scope
 
 This version includes a captain’s toss, a two-innings batting/bowling loop, touch swipes, tap controls, pro-mode timing, shot-map presets, swipe sensitivity, wickets and run scoring, a chase target, live scorecards, squad selection, venue selection, and all five requested over formats. The main ground uses original 3D-style artwork with animated ball overlays; it is still a single-camera browser scene, not a full 3D player-animation engine. There is no online multiplayer, commentary audio, or field placement editor yet.
+
+## Publish and share
+
+The included workflow deploys the playable files and original beach art to GitHub Pages. This repository is public. In the repository, open **Settings → Pages** and set **Build and deployment → Source** to **GitHub Actions** once. Then re-run the latest deployment in **Actions** (or push a new commit). After the workflow succeeds, share `https://gocool2006.github.io/tidebreak_beach_cricket/`.
