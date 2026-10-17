@@ -257,7 +257,7 @@ function beginMatch(){
   const first=toss.choice==="bat"?toss.winner:1-toss.winner;
   state.game={teamIds:state.sideTeams.slice(),lineups:state.sideLineups.map(x=>x.map(p=>({...p}))),overs:state.overs,venue:state.venue,firstBatting:first,inningsIndex:0,inningsScores:[],firstScore:null,status:"live",phase:"ready",bowlType:"pace",bowlLength:"good",event:"The teams are out on the sand. Call the first delivery.",delivery:null,result:null};
   state.game.innings=makeInnings(first,null);state.toss=null;renderToss();
-  $("#setup-screen").hidden=true;$("#game-screen").hidden=false;renderMatch();window.scrollTo({top:0,behavior:"smooth"});
+  $("#setup-screen").hidden=true;$("#game-screen").hidden=false;window.scrollTo({top:0,behavior:"smooth"});startDelivery();
 }
 function startDelivery(){
   const game=state.game;if(!game||game.status!=="live")return;
