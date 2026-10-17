@@ -27,7 +27,7 @@
             <div class="eyebrow"><span class="sun-dot"></span> SALT AIR. SOFT SAND. BIG MOMENTS.</div>
             <h1>Cricket, with<br><em>salt in the air.</em></h1>
             <p>Pick a country. Call in a legend. Take the beach edition of the world’s great grounds.</p>
-            <div class="hero-pills"><span>5 formats</span><span>21 teams</span><span>All venues unlocked</span></div>
+            <div class="hero-pills"><span>5 formats</span><span>20 nations + legends</span><span>All venues unlocked</span></div>
           </div>
           <div class="hero-illustration">
             <canvas id="menu-scene" aria-label="Illustration of a beach cricket ground"></canvas>
@@ -76,7 +76,7 @@
         </section>
 
         <div id="resume-card" class="resume-card" hidden></div>
-        <div class="launch-row"><div class="launch-note"><span class="lock-icon">✦</span><span><strong>Every ground is open.</strong><small>Choose a venue, build your XI and head for the coast.</small></span></div><button id="start-match" class="primary-button">GO TO THE TOSS <span>↗</span></button></div>
+        <div class="launch-row"><div class="launch-note"><span class="lock-icon">✦</span><span><strong>Every ground is open.</strong><small>Choose a venue, build your XI and head for the coast.</small></span></div><div class="launch-actions"><button class="secondary-button" data-command="open-auction">PLAYER AUCTION <span>♜</span></button><button id="start-match" class="primary-button">GO TO THE TOSS <span>↗</span></button></div></div>
         <p id="setup-error" class="setup-error" aria-live="polite"></p>
         <div id="local-summary" class="data-note">2026 squads follow the ICC Men’s T20 World Cup final squad list · Matches autosave after each delivery and resume when you reopen this app in the same browser.</div>
       </section>
@@ -132,6 +132,33 @@
       <div class="settings-section toggle-section"><div><strong>Timing assist</strong><small>Widens the sweet-spot window.</small></div><button class="settings-toggle" data-control-toggle="timingAssist" aria-pressed="true">ON</button></div>
       <div class="settings-section toggle-section pro-mode-row"><div><strong>Pro mode</strong><small>Tighter timing and no aim assist.</small></div><button class="settings-toggle" data-control-toggle="proMode" aria-pressed="false">OFF</button></div>
       <footer class="control-settings-footer"><span id="control-settings-note">Settings save on this device.</span><button class="primary-button" data-command="close-control-settings">DONE <span>✓</span></button></footer>
+    </section>
+  </div>
+
+  <div id="profile-modal" class="modal-backdrop profile-backdrop" hidden>
+    <section class="profile-dialog" role="dialog" aria-modal="true" aria-labelledby="profile-title">
+      <header class="dialog-header"><div><span class="eyebrow">PLAYER CARD</span><h2 id="profile-title">Player profile</h2></div><button class="close-button" data-command="close-profile" aria-label="Close player profile">×</button></header>
+      <div id="profile-detail"></div>
+      <footer class="profile-footer"><span>ORIGINAL TIDEBREAK GAME TUNING</span><button class="primary-button" data-command="close-profile">DONE <span>✓</span></button></footer>
+    </section>
+  </div>
+  <div id="auction-modal" class="modal-backdrop auction-backdrop" hidden>
+    <section class="auction-dialog" role="dialog" aria-modal="true" aria-labelledby="auction-title">
+      <header class="dialog-header"><div><span class="eyebrow">BUILD A COASTAL CLUB</span><h2 id="auction-title">Player auction</h2></div><button class="close-button" data-command="close-auction" aria-label="Close player auction">×</button></header>
+      <div id="auction-start-panel">
+        <p class="auction-intro">Raise a local purse, sign current international players and retired greats, then use your auction XI in a match. The four clubs and all auction prices are original Tidebreak game content.</p>
+        <label class="auction-club-select" for="auction-club-select"><span>YOUR CLUB</span><select id="auction-club-select"></select></label>
+        <div class="auction-rules"><span>STARTING PURSE <b>₹100 Cr</b></span><span>SQUAD SIZE <b>11–15</b></span><span>PLAYER POOL <b>Current + legends</b></span></div>
+        <button class="primary-button auction-start-button" data-command="start-auction">START AUCTION <span>↗</span></button>
+      </div>
+      <div id="auction-board" hidden>
+        <div class="auction-scorebar"><div><small>YOUR CLUB</small><strong id="auction-club-name"></strong></div><div><small>REMAINING PURSE</small><strong id="auction-budget"></strong></div><div><small>SQUAD</small><strong id="auction-squad-count"></strong></div><span id="auction-progress"></span></div>
+        <div id="auction-lot" class="auction-lot"></div>
+        <div id="auction-message" class="auction-message" aria-live="polite"></div>
+        <div class="auction-actions"><button id="auction-bid-button" class="secondary-button" data-command="auction-bid">BID</button><button id="auction-hammer-button" class="primary-button" data-command="auction-hammer">HAMMER</button></div>
+        <div class="auction-rivals" id="auction-rivals"></div>
+        <div class="auction-footer"><button id="use-auction-xi" class="text-button" data-command="use-auction-xi" disabled>USE MY AUCTION XI</button><button class="text-button" data-command="new-auction">NEW AUCTION</button></div>
+      </div>
     </section>
   </div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
