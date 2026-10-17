@@ -271,10 +271,10 @@ function endInnings(game){
   const inn=game.innings,snap=inningsSnapshot(inn);game.inningsScores[game.inningsIndex]=snap;
   if(game.inningsIndex===0){
     game.firstScore=snap;game.status="break";game.phase="result";game.delivery=null;
-    game.event=teamById[inn.battingSide].name+" finish on "+snap.runs+"/"+snap.wickets+". "+teamById[1-inn.battingSide].name+" need "+(snap.runs+1)+" to win.";
+    game.event=teamById[game.teamIds[inn.battingSide]].name+" finish on "+snap.runs+"/"+snap.wickets+". "+teamById[game.teamIds[1-inn.battingSide]].name+" need "+(snap.runs+1)+" to win.";
   }else{
     game.status="complete";game.phase="result";game.delivery=null;
-    const target=game.firstScore.runs+1,batting=teamById[inn.battingSide],defending=teamById[inn.bowlingSide];
+    const target=game.firstScore.runs+1,batting=teamById[game.teamIds[inn.battingSide]],defending=teamById[game.teamIds[inn.bowlingSide]];
     game.result=inn.runs>=target?batting.name+" win by "+(10-inn.wickets)+" wickets":inn.runs===game.firstScore.runs?"Match tied":defending.name+" win by "+(target-1-inn.runs)+" runs";
     game.event=game.result;state.matchHistory.unshift({result:game.result,teamNames:game.teamIds.map(id=>teamById[id].name),scores:game.inningsScores.map(x=>({runs:x.runs,wickets:x.wickets})),overs:game.overs,venue:venueById[game.venue].name,playedAt:new Date().toISOString()});state.matchHistory=state.matchHistory.slice(0,12);
   }
@@ -344,7 +344,7 @@ function renderControls(){
   root.innerHTML='<div class="play-overline">'+(userBat?"YOUR SIDE BATTING":"YOUR SIDE BOWLING")+' · '+esc(striker?.name||"Ready")+' ON STRIKE</div><h2>Set yourself on the sand.</h2><p>Call the next delivery at Wankhede beach.</p><button class="primary-button" data-command="launch">BOWL NEXT DELIVERY <span>↗</span></button><div class="next-ball-row"><span class="hot-key">BALL '+(inn.legal+1)+'</span><span class="hot-key">'+formatOvers(inn.legal)+' OVERS</span></div>';
 }
 function renderScorecard(){
-  const game=state.game,inn=game.innings,batSide=teamById[inn.battingSide],bowlSide=teamById[inn.bowlingSide];
+  const game=state.game,inn=game.innings,batSide=teamById[game.teamIds[inn.battingSide]],bowlSide=teamById[game.teamIds[inn.bowlingSide]];
   const rows=inn.lineup.map(p=>{const s=inn.batStats[p.key]||{runs:0,balls:0,out:false};return "<tr><td>"+esc(p.name)+(s.out?" <small>out</small>":"")+"</td><td>"+s.runs+"</td><td>"+s.balls+"</td></tr>";}).join("");
   const bowl=currentBowler(inn),bs=bowl?inn.bowlStats[bowl.key]:{balls:0,runs:0,wickets:0};
   $("#scorecard").innerHTML='<div class="scorecard-head"><span class="eyebrow">LIVE SCORECARD</span><strong>'+batSide.flag+" "+esc(batSide.name)+" · "+inn.runs+"/"+inn.wickets+'</strong><small>'+formatOvers(inn.legal)+' overs'+(inn.target!==null?" · target "+inn.target:"")+'</small></div><div class="scorecard-current"><span>STRIKER</span><strong>'+esc(currentStriker(inn)?.name||"—")+'</strong><span>'+esc(bowlSide.name)+" bowling</span><strong>"+esc(bowl?.name||"—")+" "+bs.wickets+"/"+bs.runs+" ("+formatOvers(bs.balls)+")</strong></div><div class=\"scorecard-table-wrap\"><table class=\"scorecard-table\"><thead><tr><th>BATTER</th><th>R</th><th>B</th></tr></thead><tbody>"+rows+"</tbody></table></div>";
@@ -360,7 +360,7 @@ function renderMatch(){
   $("#match-status-text").textContent=game.status==="complete"?"FULL TIME":game.status==="break"?"INNINGS BREAK":"LIVE MATCH";
   const s0=inningsScore(0),s1=inningsScore(1);
   $("#score-ribbon").innerHTML='<div class="ribbon-team"><span>'+a.flag+" "+esc(a.name)+'</span><strong>'+s0.runs+"/"+s0.wickets+'</strong><small>'+formatOvers(s0.legal)+" ov"+(game.inningsIndex===0?" · 1ST":"")+'</small></div><div class="ribbon-divider">VS</div><div class="ribbon-team"><span>'+b.flag+" "+esc(b.name)+'</span><strong>'+s1.runs+"/"+s1.wickets+'</strong><small>'+formatOvers(s1.legal)+" ov"+(game.inningsIndex===1?" · 2ND":"")+'</small></div>';
-  $("#scene-score").textContent=teamById[inn.battingSide].name+" "+inn.runs+"/"+inn.wickets;
+  $("#scene-score").textContent=teamById[game.teamIds[inn.battingSide]].name+" "+inn.runs+"/"+inn.wickets;
   $("#scene-target").textContent=inn.target===null?game.overs+" OVERS · FIRST INNINGS":"TARGET "+inn.target+" · NEED "+Math.max(0,inn.target-inn.runs)+" FROM "+Math.max(0,game.overs*6-inn.legal)+" BALLS";
   $("#ground-name").textContent=venue.name;$("#ground-city").textContent=venue.city;
   renderControls();renderScorecard();renderResumeCard();syncSwipeHint();saveLocalData();drawScene();
