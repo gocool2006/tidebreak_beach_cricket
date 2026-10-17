@@ -82,6 +82,7 @@ const state={
 const SAVE_KEY="tidebreak.local.v1";
 const beachArtwork=new Image();
 beachArtwork.src="assets/tidebreak-beach-ground.png";
+beachArtwork.onload=()=>{drawMenuScene();drawScene();};
 const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function saveLocalData(){
   try{
@@ -388,6 +389,22 @@ function drawScene(){
     requestAnimationFrame(drawScene);
   }
 }
+function drawMenuScene(){
+  const canvas=$("#menu-scene");if(!canvas)return;
+  const rect=canvas.getBoundingClientRect();if(!rect.width||!rect.height)return;
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  if(canvas.width!==Math.round(rect.width*dpr)||canvas.height!==Math.round(rect.height*dpr)){canvas.width=Math.round(rect.width*dpr);canvas.height=Math.round(rect.height*dpr);}
+  const ctx=canvas.getContext("2d");ctx.setTransform(canvas.width/1200,0,0,canvas.height/675,0,0);
+  if(beachArtwork.complete&&beachArtwork.naturalWidth){
+    const ratio=1200/675,source=beachArtwork.naturalWidth/beachArtwork.naturalHeight;let sx=0,sy=0,sw=beachArtwork.naturalWidth,sh=beachArtwork.naturalHeight;
+    if(source>ratio){sw=beachArtwork.naturalHeight*ratio;sx=(beachArtwork.naturalWidth-sw)/2;}else{sh=beachArtwork.naturalWidth/ratio;sy=(beachArtwork.naturalHeight-sh)/2;}
+    ctx.drawImage(beachArtwork,sx,sy,sw,sh,0,0,1200,675);
+  }else{
+    const g=ctx.createLinearGradient(0,0,0,675);g.addColorStop(0,"#8bcfda");g.addColorStop(.50,"#48aebb");g.addColorStop(.51,"#ecd09a");g.addColorStop(1,"#d2ad72");ctx.fillStyle=g;ctx.fillRect(0,0,1200,675);
+    ctx.fillStyle="rgba(255,255,255,.3)";for(let i=0;i<9;i++){ctx.beginPath();ctx.ellipse(70+i*140,350+(i%2)*22,80,7,0,0,Math.PI*2);ctx.fill();}
+    ctx.fillStyle="#c59a63";ctx.fillRect(390,330,420,24);ctx.fillStyle="#f6e2bb";ctx.fillRect(565,275,70,140);
+  }
+}
 function renderControlSettings(){
   const modal=$("#control-settings-modal");if(!modal)return;modal.hidden=false;
   modal.querySelectorAll("[data-control-mode]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.controlMode===state.controls.mode)));
@@ -408,7 +425,7 @@ function pauseActiveDelivery(){
 }
 function openHome(){pauseActiveDelivery();$("#game-screen").hidden=true;$("#setup-screen").hidden=false;renderSetup();window.scrollTo({top:0,behavior:"smooth"});}
 function renderApp(){
-  loadLocalData();fillSelects();renderSetup();
+  loadLocalData();fillSelects();renderSetup();drawMenuScene();window.addEventListener("resize",()=>{drawMenuScene();drawScene();});
   $("#team-a-select").addEventListener("change",e=>setTeam(0,e.target.value));
   $("#team-b-select").addEventListener("change",e=>setTeam(1,e.target.value));
   $("#start-match").addEventListener("click",tossOpen);
