@@ -91,8 +91,8 @@ const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;
 function saveLocalData(){
   try{
     const game=state.game?JSON.parse(JSON.stringify(state.game)):null;
-    if(game&&game.status==="live"&&(game.phase==="bat-flight"||game.phase==="bowl-meter")){
-      game.phase="ready";game.delivery=null;game.event="Match saved. The next delivery is ready.";
+    if(game&&game.status==="live"&&(game.phase==="bat-flight"||game.phase==="bowl-meter"||game.phase==="shot-flight")){
+      game.phase="ready";game.delivery=null;game.ballFlight=null;game.event="Match saved. The next delivery is ready.";
     }
     localStorage.setItem(SAVE_KEY,JSON.stringify({version:1,savedAt:new Date().toISOString(),sideTeams:state.sideTeams,sideLineups:state.sideLineups.map(x=>x.map(p=>p.key)),overs:state.overs,venue:state.venue,venueType:state.venueType,game,toss:state.toss,controls:state.controls,matchHistory:state.matchHistory.slice(0,12)}));
     const badge=$("#save-status");if(badge){badge.textContent="SAVED ON THIS DEVICE";badge.dataset.saved="true";}
@@ -123,7 +123,7 @@ function loadLocalData(){
     const g=saved.game;
     if(g&&Array.isArray(g.teamIds)&&g.teamIds.length===2&&g.teamIds.every(id=>teamById[id])&&venueById[g.venue]&&[5,10,20,30,50].includes(Number(g.overs))&&Array.isArray(g.lineups)&&g.innings){
       state.game=g;
-      if(g.status==="live"&&(g.phase==="bat-flight"||g.phase==="bowl-meter")){g.phase="ready";g.delivery=null;g.event="The saved match is ready for the next delivery.";}
+      if(g.status==="live"&&(g.phase==="bat-flight"||g.phase==="bowl-meter"||g.phase==="shot-flight")){g.phase="ready";g.delivery=null;g.ballFlight=null;g.event="The saved match is ready for the next delivery.";}
     }
     if(!state.game&&saved.toss&&["call","choose","result"].includes(saved.toss.phase)&&Array.isArray(saved.toss.teams)&&saved.toss.teams.every(id=>teamById[id]))state.toss=saved.toss;
     const badge=$("#save-status");if(badge){badge.textContent="LOCAL SAVE RESTORED";badge.dataset.saved="true";}
@@ -269,7 +269,7 @@ function startDelivery(){
   const game=state.game;if(!game||game.status!=="live")return;
   game.startedAt=performance.now();
   game.delivery={line:randomItem(["outside off","on the stumps","short","full"]),duration:2350,target:1550+Math.random()*450};
-  game.phase=game.innings.battingSide===0?"bat-flight":"bowl-meter";renderMatch();
+  game.ballFlight=null;game.phase=game.innings.battingSide===0?"bat-flight":"bowl-meter";renderMatch();
   const active=game;
   setTimeout(()=>{if(state.game!==active)return;if(active.phase==="bat-flight")playShot("defend",performance.now()-active.startedAt);else if(active.phase==="bowl-meter")releaseBowl();},game.delivery.duration+550);
 }
@@ -285,7 +285,7 @@ function endInnings(game){
     game.event=game.result;state.matchHistory.unshift({result:game.result,teamNames:game.teamIds.map(id=>teamById[id].name),scores:game.inningsScores.map(x=>({runs:x.runs,wickets:x.wickets})),overs:game.overs,venue:venueById[game.venue].name,playedAt:new Date().toISOString()});state.matchHistory=state.matchHistory.slice(0,12);
   }
 }
-function recordBall(runs,isOut,quality){
+function recordBall(runs,isOut,quality,trajectory){
   const game=state.game,inn=game.innings,batter=currentStriker(inn),bowler=currentBowler(inn),bs=inn.batStats[batter.key],ws=inn.bowlStats[bowler.key];
   bs.balls++;ws.balls++;ws.runs+=runs;inn.runs+=runs;bs.runs+=runs;
   if(runs===4)bs.fours++;if(runs===6)bs.sixes++;
@@ -294,8 +294,15 @@ function recordBall(runs,isOut,quality){
   inn.legal++;
   if(inn.legal%6===0)[inn.strikerIndex,inn.nonStrikerIndex]=[inn.nonStrikerIndex,inn.strikerIndex];
   const shotText=isOut?"OUT! The "+randomItem(["keeper","fielder","bowler"])+" takes it cleanly.":runs===6?"SIX! It clears the rope.":runs===4?"FOUR! A clean strike into the boundary.":runs===0?"Dot ball. Good line on the sand.":runs+" run"+(runs===1?"":"s")+" taken.";
-  game.event=shotText;game.phase="result";game.delivery=null;
-  if((inn.target!==null&&inn.runs>=inn.target)||inn.legal>=game.overs*6||inn.wickets>=10)endInnings(game);
+  game.event=shotText;game.delivery=null;
+  const inningsEnded=(inn.target!==null&&inn.runs>=inn.target)||inn.legal>=game.overs*6||inn.wickets>=10;
+  if(inningsEnded){game.phase="result";game.ballFlight=null;endInnings(game);}
+  else{
+    game.phase="shot-flight";
+    const action=trajectory||{};
+    game.ballFlight={startedAt:performance.now(),duration:action.loft?1200:950,angle:Number.isFinite(action.angle)?action.angle:-Math.PI/2,loft:Boolean(action.loft),runs,isOut:Boolean(isOut),quality};
+    setTimeout(()=>{if(state.game===game&&game.phase==="shot-flight"){game.phase="result";game.ballFlight=null;renderMatch();}},game.ballFlight.duration);
+  }
   renderMatch();
 }
 function playShot(action,elapsed){
@@ -308,7 +315,7 @@ function playShot(action,elapsed){
   const quality=clamp(timing*(fit?1+(state.controls.shotMap==="precision"?.08:0):assist?.66:.42)+boost,0,1);
   const wicketChance=(quality>.78?.035:quality>.45?.09:quality>.18?.17:.25)+(state.controls.proMode?.045:0);
   const runs=weightedRun(quality>.76?[[0,.20],[1,.23],[2,.17],[3,.04],[4,.26],[6,.10]]:quality>.4?[[0,.28],[1,.38],[2,.16],[3,.03],[4,.12],[6,.03]]:[[0,.46],[1,.35],[2,.10],[3,.02],[4,.06],[6,.01]]);
-  recordBall(runs,Math.random()<wicketChance,quality);
+  recordBall(runs,Math.random()<wicketChance,quality,{angle:({drive:-Math.PI/2,cut:-2.55,loft:-.82,defend:-1.78})[action]??-Math.PI/2,loft:action==="loft"||quality>.86&&action!=="defend"});
 }
 function releaseBowl(){
   const game=state.game;if(!game||game.phase!=="bowl-meter")return;
@@ -316,7 +323,7 @@ function releaseBowl(){
   const lineFit=game.bowlType==="spin"?.02:0,lengthFit=game.bowlLength==="good"?.04:game.bowlLength==="yorker"?.06:0;
   const wicket=Math.random()<(accuracy>.75?.16:accuracy>.4?.09:.04)+lineFit+lengthFit;
   const runs=weightedRun(accuracy>.7?[[0,.38],[1,.36],[2,.13],[4,.10],[6,.03]]:[[0,.28],[1,.42],[2,.18],[4,.10],[6,.02]]);
-  recordBall(runs,wicket,accuracy);
+  recordBall(runs,wicket,accuracy,{angle:randomItem([-2.65,-2.05,-1.45,-.85]),loft:runs===6});
 }
 function startChase(){
   const game=state.game;if(!game||game.status!=="break")return;
@@ -340,6 +347,9 @@ function renderControls(){
   if(game.phase==="bat-flight"){
     root.innerHTML='<div class="play-overline">YOUR SIDE BATTING · '+esc(striker?.name||"Batter")+' ON STRIKE · '+(state.controls.proMode?"PRO MODE":"SWIPE BATTING")+'</div><h2>'+(state.controls.mode==="swipe"?"Swipe the pitch. Time your shot.":"Watch it down. Pick your shot.")+'</h2><p>The ball is on its way from '+esc(bowler?.name||"the bowler")+'. Swipe in a direction or tap a shot.</p><div class="shot-grid">'+[["drive","Drive","→"],["loft","Loft","↑"],["cut","Cut","←"],["defend","Defend","↓"]].map(x=>'<button class="shot-button" data-shot="'+x[0]+'">'+x[1]+'<b>'+(state.controls.mode==="swipe"?"SWIPE ":"KEY ")+x[2]+'</b></button>').join("")+'</div><div class="next-ball-row"><span class="hot-key">'+state.controls.shotMap.toUpperCase()+" SHOT MAP · BALL "+(inn.legal+1)+'</span><span class="hot-key">SENSITIVITY '+state.controls.sensitivity.toFixed(1)+'×</span></div>';
     return;
+  }
+  if(game.phase==="shot-flight"){
+    root.innerHTML='<div class="play-overline">BALL IN PLAY · '+formatOvers(inn.legal)+' OVERS</div><h2>Follow the shot into the field.</h2><p>'+esc(game.event)+' · '+inn.runs+'/'+inn.wickets+'</p>';return;
   }
   if(game.phase==="bowl-meter"){
     root.innerHTML='<div class="play-overline">YOUR SIDE BOWLING · '+esc(bowler?.name||"Bowler")+'</div><h2>Pick the ball. Time the release.</h2><p>Choose a style and length, then release near the sweet spot.</p><div class="bowl-options"><button class="settings-option" data-bowl-type="pace" aria-pressed="'+(game.bowlType==="pace")+'">PACE</button><button class="settings-option" data-bowl-type="spin" aria-pressed="'+(game.bowlType==="spin")+'">SPIN</button><button class="settings-option" data-bowl-length="good" aria-pressed="'+(game.bowlLength==="good")+'">GOOD LENGTH</button><button class="settings-option" data-bowl-length="yorker" aria-pressed="'+(game.bowlLength==="yorker")+'">YORKER</button></div><button class="primary-button" data-command="release-bowl">RELEASE DELIVERY <span>↗</span></button>';return;
@@ -388,16 +398,17 @@ function drawPlayerFigure(ctx,x,y,scale,color,pose){
   ctx.strokeStyle=color;ctx.lineWidth=7;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(0,-21);ctx.lineTo(0,-10);ctx.stroke();
   ctx.lineWidth=3.4;ctx.beginPath();
   if(pose==="run"){ctx.moveTo(0,-19);ctx.lineTo(-7,-13);ctx.moveTo(0,-19);ctx.lineTo(7,-25);}
+  else if(pose==="swing"){ctx.moveTo(0,-19);ctx.lineTo(8,-25);ctx.moveTo(0,-19);ctx.lineTo(12,-14);}
   else{ctx.moveTo(0,-19);ctx.lineTo(-7,-12);ctx.moveTo(0,-19);ctx.lineTo(7,-12);}
   ctx.stroke();
   ctx.strokeStyle="#243d3d";ctx.lineWidth=3.7;ctx.beginPath();
   if(pose==="run"){ctx.moveTo(0,-10);ctx.lineTo(-6,-4);ctx.moveTo(0,-10);ctx.lineTo(7,-2);}
   else{ctx.moveTo(0,-10);ctx.lineTo(-4,0);ctx.moveTo(0,-10);ctx.lineTo(4,0);}
   ctx.stroke();
-  if(pose==="bat"){ctx.strokeStyle="#f2dfb9";ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(7,-12);ctx.lineTo(14,-1);ctx.stroke();}
+  if(pose==="bat"||pose==="swing"){ctx.strokeStyle="#f2dfb9";ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(pose==="swing"?11:7,pose==="swing"?-15:-12);ctx.lineTo(pose==="swing"?20:14,pose==="swing"?-29:-1);ctx.stroke();}
   ctx.restore();
 }
-function drawGreenStadium(ctx,venue,runProgress){
+function drawGreenStadium(ctx,venue,runProgress,batterPose){
   const sky=ctx.createLinearGradient(0,0,0,675);sky.addColorStop(0,venue.sky);sky.addColorStop(.55,"#e4eff0");sky.addColorStop(.56,"#438d65");sky.addColorStop(1,"#176542");ctx.fillStyle=sky;ctx.fillRect(0,0,1200,675);
   ctx.fillStyle=venue.sun;ctx.beginPath();ctx.arc(1020,90,38,0,Math.PI*2);ctx.fill();
   ctx.fillStyle="rgba(255,255,255,.55)";[[190,85,80],[380,120,56],[790,75,66]].forEach(([x,y,r])=>{ctx.beginPath();ctx.ellipse(x,y,r,13,0,0,Math.PI*2);ctx.fill();});
@@ -418,7 +429,7 @@ function drawGreenStadium(ctx,venue,runProgress){
   [[600,374],[600,590]].forEach(([x,y])=>{ctx.strokeStyle="#fff9e8";ctx.lineWidth=2;for(let i=-1;i<=1;i++){ctx.beginPath();ctx.moveTo(x+i*6,y);ctx.lineTo(x+i*6,y-17);ctx.stroke();}ctx.beginPath();ctx.moveTo(x-10,y-7);ctx.lineTo(x+10,y-7);ctx.stroke();});
   [[370,438],[465,520],[735,500],[850,420],[300,518],[930,540],[485,405],[715,410]].forEach((p,i)=>drawPlayerFigure(ctx,p[0],p[1],i<4?.8:.67,i%2?"#f2f0e5":"#e9c95e","field"));
   const bowlerX=535+clamp(runProgress||0,0,1)*65;drawPlayerFigure(ctx,bowlerX,425,.82,"#e9c95e",runProgress&&runProgress<.8?"run":"field");
-  drawPlayerFigure(ctx,600,535,1.03,"#f2f0e5","bat");
+  drawPlayerFigure(ctx,600,535,1.03,"#f2f0e5",batterPose||"bat");
   drawPlayerFigure(ctx,587,388,.72,"#f2f0e5","field");
   ctx.fillStyle="rgba(15,44,39,.48)";ctx.fillRect(0,0,1200,48);
   ctx.fillStyle="#f7f4e8";ctx.font="500 13px sans-serif";ctx.fillText(venue.name.toUpperCase()+" · MATCH DAY",28,30);
@@ -429,13 +440,21 @@ function drawScene(){
   const dpr=Math.min(window.devicePixelRatio||1,2),w=rect.width,h=rect.height;
   if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
   const ctx=canvas.getContext("2d");ctx.setTransform(canvas.width/1200,0,0,canvas.height/675,0,0);
-  const game=state.game,venue=venueById[game?.venue||state.venue],running=game&&(game.phase==="bat-flight"||game.phase==="bowl-meter"),elapsed=running?performance.now()-game.startedAt:0;
-  if(venue?.type==="green")drawGreenStadium(ctx,venue,running?clamp(elapsed/900,0,1):1);
+  const game=state.game,venue=venueById[game?.venue||state.venue],running=game&&(game.phase==="bat-flight"||game.phase==="bowl-meter"),elapsed=running?performance.now()-game.startedAt:0,flightActive=game?.phase==="shot-flight"&&game.ballFlight;
+  if(venue?.type==="green")drawGreenStadium(ctx,venue,running?clamp(elapsed/900,0,1):1,running&&game.phase==="bat-flight"&&elapsed>=game.delivery.target?"swing":"bat");
   else drawBeachGround(ctx);
   if(venue?.type==="beach"&&running){
     const p=clamp(elapsed/game.delivery.duration,0,1);
     drawPlayerFigure(ctx,540+clamp(elapsed/900,0,1)*60,425,.82,"#e9c95e",p<.72?"run":"field");
-    drawPlayerFigure(ctx,600,535,1.03,"#f2f0e5",p>.8?"bat":"field");
+    drawPlayerFigure(ctx,600,535,1.03,"#f2f0e5",game.phase==="bat-flight"&&elapsed>=game.delivery.target?"swing":"bat");
+  }
+  if(flightActive){
+    const f=game.ballFlight,p=clamp((performance.now()-f.startedAt)/f.duration,0,1),distance=f.runs===6?470:f.runs===4?390:f.runs===3?300:f.runs===2?220:f.runs===1?125:70;
+    const tx=600+Math.cos(f.angle)*distance,ty=535+Math.sin(f.angle)*distance,arc=Math.sin(Math.PI*p)*(f.loft?150:50),x=600+(tx-600)*p,y=535+(ty-535)*p-arc;
+    const fielderStart=tx<600?[835,425]:[365,435];
+    if(p>.12)drawPlayerFigure(ctx,fielderStart[0]+(x-fielderStart[0])*clamp((p-.12)*1.25,0,1),fielderStart[1]+(y-fielderStart[1])*clamp((p-.12)*1.25,0,1),.82,"#f2f0e5","run");
+    ctx.strokeStyle="rgba(255,248,214,.74)";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(x-5,y+18);ctx.lineTo(x,y);ctx.stroke();ctx.fillStyle=f.isOut?"#e87358":"#fff8e7";ctx.beginPath();ctx.arc(x,y,Math.max(3,9-p*5),0,Math.PI*2);ctx.fill();
+    requestAnimationFrame(drawScene);
   }
   if(running&&game.delivery){
     const p=clamp(elapsed/game.delivery.duration,0,1),x=600+Math.sin(p*3.1)*30,y=(venue?.type==="green"?365:330)+p*185,r=10-p*3;
@@ -475,7 +494,7 @@ function applySwipe(dx,dy){
   playShot(action,performance.now()-game.startedAt);
 }
 function pauseActiveDelivery(){
-  const game=state.game;if(game?.status==="live"&&(game.phase==="bat-flight"||game.phase==="bowl-meter")){game.phase="ready";game.delivery=null;game.event="Match paused. The next delivery is ready.";}
+  const game=state.game;if(game?.status==="live"&&(game.phase==="bat-flight"||game.phase==="bowl-meter"||game.phase==="shot-flight")){game.phase="ready";game.delivery=null;game.ballFlight=null;game.event="Match paused. The next delivery is ready.";}
 }
 function openHome(){pauseActiveDelivery();$("#game-screen").hidden=true;$("#setup-screen").hidden=false;renderSetup();window.scrollTo({top:0,behavior:"smooth"});}
 function renderApp(){
