@@ -8,7 +8,7 @@ The project is plain HTML, CSS, and JavaScript. For stable local saves, open a t
 
 ## Local saves
 
-Team choices, both playing XIs, match format, an unfinished toss, stadium, batting input mode, shot-map preset, swipe sensitivity, pro-mode settings, the in-progress match, and the 12 most recent results are stored in this browser’s local storage. Match state autosaves after each delivery. Choose **PAUSE & SAVE** to return to setup without losing the match, then choose **RESUME MATCH**; active matches also reopen automatically after closing and reopening the app. A saved result can be reopened from the setup screen. Nothing is uploaded or synchronized. Keep using the same browser and address (`http://localhost:4173`) to find the same save. Browser storage is controlled by the browser: clearing site data, using a different browser/profile/address, or uninstalling an app/browser that removes its site data can erase it. A static browser game cannot guarantee automatic recovery after its browser-owned storage has been deleted.
+Team choices, both playing XIs, match format, an unfinished toss, stadium, batting input mode, shot-map preset, swipe sensitivity, pro-mode settings, auction progress, club purse and squads, the in-progress match, and the 12 most recent results are stored in this browser’s local storage. Match state autosaves after each delivery. Choose **PAUSE & SAVE** to return to setup without losing the match, then choose **RESUME MATCH**; active matches also reopen automatically after closing and reopening the app. A saved result can be reopened from the setup screen. Nothing is uploaded or synchronized. Keep using the same browser and address (`http://localhost:4173`) to find the same save. Browser storage is controlled by the browser: clearing site data, using a different browser/profile/address, or uninstalling an app/browser that removes its site data can erase it. A static browser game cannot guarantee automatic recovery after its browser-owned storage has been deleted.
 
 ## Play
 
@@ -26,9 +26,17 @@ Twenty national teams use the confirmed ICC Men’s T20 World Cup 2026 squad lis
 
 The 2026 squad snapshot follows the [ICC’s final squad announcement](https://www.icc-cricket.com/tournaments/mens-t20-world-cup-2026/news/final-squads-for-icc-men-s-t20-world-cup-2026-confirmed). Real Cricket’s [Google Play listing](https://play.google.com/store/apps/details?id=com.nautilus.realcricket) was used only as a broad gameplay reference for match setup, international teams, batting controls, and scorecards. Tidebreak does not use Real Cricket’s assets, branding, UI art, or character models.
 
+## Player profiles
+
+Use **PROFILE** next to a player in the squad manager or auction lot to see a Tidebreak role, batting, power, control, bowling and fielding ratings, plus a simulated delivery-speed band for some bowling roles. The profile is a deterministic, original game-balance model. It is not a verified career record, official rating, or measurement of a real player's bowling speed. Current internationals and retired greats can both appear in auction lots.
+
+## Player auction
+
+Open **PLAYER AUCTION** from match setup, choose one of four fictional coastal clubs, and start with a ₹100 Cr purse. The 100 lots in a session are drawn from a 382-entry pool built from the game's 20 national squads and its retired-player pool. Three AI clubs may raise bids. Use **BID**, then **HAMMER** to buy or pass on each lot. Club budgets and rosters save locally. Build at least 11 players, then choose **USE MY AUCTION XI**; Tidebreak adds that XI to the next-match team selector. Each club can sign up to 15 players.
+
 ## Prototype scope
 
-This version includes a captain’s toss, a two-innings batting/bowling loop, touch swipes, tap controls, pro-mode timing, shot-map presets, swipe sensitivity, wickets and run scoring, a chase target, live scorecards, squad selection, venue selection, and all five requested over formats. The main ground uses original 3D-style artwork with animated ball overlays; it is still a single-camera browser scene, not a full 3D player-animation engine. There is no online multiplayer, commentary audio, or field placement editor yet.
+This version includes a captain’s toss, two innings of batting and bowling, touch swipes, tap controls, pro-mode timing, shot-map presets, swipe sensitivity, wickets and runs, a chase target, live scorecards, squad selection, player profile cards, a local player auction, venue selection, and all five requested over formats. Original canvas figures now animate the bowler’s run-up, delivery and follow-through, the batter’s load, shot and follow-through, and fielder run, dive and catch poses. These are procedural 2D game animations, not motion capture or a full 3D animation engine. Physical phone testing, online multiplayer, commentary audio, and field placement are still not included or verified.
 
 ## Publish and share
 
