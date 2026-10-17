@@ -43,21 +43,25 @@ const legendByTeam = {
 };
 
 const venues = [
-  {id:"WANKHEDE",name:"Wankhede Stadium",city:"Mumbai · India",sky:"#87d5ef",sea:"#47b3c0",sand:"#efd09a",hill:"#4c8976",sun:"#ffe5a5"},
-  {id:"EDEN",name:"Eden Gardens",city:"Kolkata · India",sky:"#91d4ec",sea:"#48b4c1",sand:"#e9c991",hill:"#4b8c76",sun:"#ffe7a7"},
-  {id:"NARENDRA",name:"Narendra Modi Stadium",city:"Ahmedabad · India",sky:"#9dd5e9",sea:"#4cabb6",sand:"#e7c18b",hill:"#5b8b70",sun:"#ffdfa0"},
-  {id:"CHIDAMBARAM",name:"M. A. Chidambaram Stadium",city:"Chennai · India",sky:"#80d2e5",sea:"#34abb8",sand:"#f0d39f",hill:"#428b72",sun:"#ffe29d"},
-  {id:"CHINNASWAMY",name:"M. Chinnaswamy Stadium",city:"Bengaluru · India",sky:"#9bd6e9",sea:"#4aaebb",sand:"#e8cc99",hill:"#548c72",sun:"#ffe2a3"},
-  {id:"LORDS",name:"Lord’s Cricket Ground",city:"London · England",sky:"#a2d5e6",sea:"#549aa8",sand:"#e2ca9e",hill:"#62836f",sun:"#f8e4b8"},
-  {id:"OVAL",name:"The Oval",city:"London · England",sky:"#a0d7e6",sea:"#4b9da9",sand:"#e4c99a",hill:"#5f8973",sun:"#f9e5af"},
-  {id:"MCG",name:"Melbourne Cricket Ground",city:"Melbourne · Australia",sky:"#8bcfe3",sea:"#3c9ead",sand:"#efcf95",hill:"#55816a",sun:"#ffdfa0"},
-  {id:"SCG",name:"Sydney Cricket Ground",city:"Sydney · Australia",sky:"#90d3e7",sea:"#49aeb8",sand:"#efd19d",hill:"#5a8c73",sun:"#ffe3a4"},
-  {id:"GADDAFI",name:"Gaddafi Stadium",city:"Lahore · Pakistan",sky:"#a4d3dc",sea:"#508f9b",sand:"#e8c68e",hill:"#6c8564",sun:"#ffe0a4"},
-  {id:"PREMADASA",name:"R. Premadasa Stadium",city:"Colombo · Sri Lanka",sky:"#7ed2df",sea:"#33a5ac",sand:"#e9c995",hill:"#4b8a68",sun:"#ffe6a4"},
-  {id:"NEWLANDS",name:"Newlands Cricket Ground",city:"Cape Town · South Africa",sky:"#91cfe0",sea:"#438fa7",sand:"#e4c995",hill:"#71886e",sun:"#fbe2ac"},
-  {id:"KENSINGTON",name:"Kensington Oval",city:"Bridgetown · Barbados",sky:"#7ed9e4",sea:"#269db1",sand:"#f0d29a",hill:"#4a8d73",sun:"#ffe4a4"},
-  {id:"BASIN",name:"Basin Reserve",city:"Wellington · New Zealand",sky:"#a6d4e5",sea:"#468ca2",sand:"#e3c998",hill:"#61816c",sun:"#fce7bc"},
-  {id:"DUBAI",name:"Dubai International Stadium",city:"Dubai · UAE",sky:"#93d0e5",sea:"#3aa9bb",sand:"#efd09a",hill:"#b58c62",sun:"#ffe49c"}
+  {"type":"beach","id":"TIDEBREAK_BAY","name":"Tidebreak Bay Beach Ground","city":"Konkan Coast · India","sky":"#85d4e3","sea":"#32aeb9","sand":"#efd19a","hill":"#548c72","sun":"#ffe4a4"},
+  {"type":"beach","id":"CORAL_COVE","name":"Coral Cove Arena","city":"Goa · India","sky":"#7bd7e3","sea":"#23aab9","sand":"#f2d39b","hill":"#508d74","sun":"#ffe39d"},
+  {"type":"beach","id":"PALM_SHORE","name":"Palm Shore Oval","city":"Kerala · India","sky":"#91d9e6","sea":"#38abb1","sand":"#e8c88d","hill":"#478b70","sun":"#ffe5a4"},
+  {"type":"beach","id":"SUNSET_LAGOON","name":"Sunset Lagoon Ground","city":"Indian Ocean","sky":"#edb28a","sea":"#4d9eaa","sand":"#e7c48e","hill":"#4e806a","sun":"#ffe0a0"},
+    {type:"green",id:"WANKHEDE",name:"Wankhede Stadium",city:"Mumbai · India",sky:"#87d5ef",sea:"#47b3c0",sand:"#efd09a",hill:"#4c8976",sun:"#ffe5a5"},
+  {type:"green",id:"EDEN",name:"Eden Gardens",city:"Kolkata · India",sky:"#91d4ec",sea:"#48b4c1",sand:"#e9c991",hill:"#4b8c76",sun:"#ffe7a7"},
+  {type:"green",id:"NARENDRA",name:"Narendra Modi Stadium",city:"Ahmedabad · India",sky:"#9dd5e9",sea:"#4cabb6",sand:"#e7c18b",hill:"#5b8b70",sun:"#ffdfa0"},
+  {type:"green",id:"CHIDAMBARAM",name:"M. A. Chidambaram Stadium",city:"Chennai · India",sky:"#80d2e5",sea:"#34abb8",sand:"#f0d39f",hill:"#428b72",sun:"#ffe29d"},
+  {type:"green",id:"CHINNASWAMY",name:"M. Chinnaswamy Stadium",city:"Bengaluru · India",sky:"#9bd6e9",sea:"#4aaebb",sand:"#e8cc99",hill:"#548c72",sun:"#ffe2a3"},
+  {type:"green",id:"LORDS",name:"Lord’s Cricket Ground",city:"London · England",sky:"#a2d5e6",sea:"#549aa8",sand:"#e2ca9e",hill:"#62836f",sun:"#f8e4b8"},
+  {type:"green",id:"OVAL",name:"The Oval",city:"London · England",sky:"#a0d7e6",sea:"#4b9da9",sand:"#e4c99a",hill:"#5f8973",sun:"#f9e5af"},
+  {type:"green",id:"MCG",name:"Melbourne Cricket Ground",city:"Melbourne · Australia",sky:"#8bcfe3",sea:"#3c9ead",sand:"#efcf95",hill:"#55816a",sun:"#ffdfa0"},
+  {type:"green",id:"SCG",name:"Sydney Cricket Ground",city:"Sydney · Australia",sky:"#90d3e7",sea:"#49aeb8",sand:"#efd19d",hill:"#5a8c73",sun:"#ffe3a4"},
+  {type:"green",id:"GADDAFI",name:"Gaddafi Stadium",city:"Lahore · Pakistan",sky:"#a4d3dc",sea:"#508f9b",sand:"#e8c68e",hill:"#6c8564",sun:"#ffe0a4"},
+  {type:"green",id:"PREMADASA",name:"R. Premadasa Stadium",city:"Colombo · Sri Lanka",sky:"#7ed2df",sea:"#33a5ac",sand:"#e9c995",hill:"#4b8a68",sun:"#ffe6a4"},
+  {type:"green",id:"NEWLANDS",name:"Newlands Cricket Ground",city:"Cape Town · South Africa",sky:"#91cfe0",sea:"#438fa7",sand:"#e4c995",hill:"#71886e",sun:"#fbe2ac"},
+  {type:"green",id:"KENSINGTON",name:"Kensington Oval",city:"Bridgetown · Barbados",sky:"#7ed9e4",sea:"#269db1",sand:"#f0d29a",hill:"#4a8d73",sun:"#ffe4a4"},
+  {type:"green",id:"BASIN",name:"Basin Reserve",city:"Wellington · New Zealand",sky:"#a6d4e5",sea:"#468ca2",sand:"#e3c998",hill:"#61816c",sun:"#fce7bc"},
+  {type:"green",id:"DUBAI",name:"Dubai International Stadium",city:"Dubai · UAE",sky:"#93d0e5",sea:"#3aa9bb",sand:"#efd09a",hill:"#b58c62",sun:"#ffe49c"}
 ];
 
 const worldLegends = Object.entries(legendByTeam).flatMap(([country,names])=>names.map(name=>({name,country})));
@@ -75,7 +79,7 @@ const firstXI=id=> (id==="LEG"?legendMembers(id):currentMembers(id)).slice(0,11)
 const state={
   sideTeams:["IND","AUS"],
   sideLineups:[firstXI("IND"),firstXI("AUS")],
-  overs:5,venue:"WANKHEDE",squadSide:0,squadPool:"current",game:null,toss:null,
+  overs:5,venue:"TIDEBREAK_BAY",venueType:"beach",squadSide:0,squadPool:"current",game:null,toss:null,
   controls:{mode:"swipe",shotMap:"balanced",sensitivity:1,timingAssist:true,proMode:false},
   matchHistory:[]
 };
@@ -90,7 +94,7 @@ function saveLocalData(){
     if(game&&game.status==="live"&&(game.phase==="bat-flight"||game.phase==="bowl-meter")){
       game.phase="ready";game.delivery=null;game.event="Match saved. The next delivery is ready.";
     }
-    localStorage.setItem(SAVE_KEY,JSON.stringify({version:1,savedAt:new Date().toISOString(),sideTeams:state.sideTeams,sideLineups:state.sideLineups.map(x=>x.map(p=>p.key)),overs:state.overs,venue:state.venue,game,toss:state.toss,controls:state.controls,matchHistory:state.matchHistory.slice(0,12)}));
+    localStorage.setItem(SAVE_KEY,JSON.stringify({version:1,savedAt:new Date().toISOString(),sideTeams:state.sideTeams,sideLineups:state.sideLineups.map(x=>x.map(p=>p.key)),overs:state.overs,venue:state.venue,venueType:state.venueType,game,toss:state.toss,controls:state.controls,matchHistory:state.matchHistory.slice(0,12)}));
     const badge=$("#save-status");if(badge){badge.textContent="SAVED ON THIS DEVICE";badge.dataset.saved="true";}
   }catch(error){const badge=$("#save-status");if(badge){badge.textContent="LOCAL SAVE UNAVAILABLE";badge.dataset.saved="false";}}
 }
@@ -106,7 +110,8 @@ function loadLocalData(){
       });
     }
     if([5,10,20,30,50].includes(Number(saved.overs)))state.overs=Number(saved.overs);
-    if(venueById[saved.venue])state.venue=saved.venue;
+    if(venueById[saved.venue]){state.venue=saved.venue;state.venueType=venueById[saved.venue].type;}
+    if(["beach","green"].includes(saved.venueType))state.venueType=saved.venueType;
     if(saved.controls&&typeof saved.controls==="object"){
       if(["swipe","tap"].includes(saved.controls.mode))state.controls.mode=saved.controls.mode;
       if(["balanced","precision","power"].includes(saved.controls.shotMap))state.controls.shotMap=saved.controls.shotMap;
@@ -169,7 +174,8 @@ function renderSetup(){
     const summary=id==="LEG"?total+" all-time greats · international squads available too":"ICC 2026 group "+team.group+" · "+total+" current squad players";
     preview.innerHTML='<span class="team-flag">'+team.flag+'</span><span><strong>'+esc(team.name)+'</strong><small>'+esc(summary)+'</small></span>';
   });
-  $("#venue-grid").innerHTML=venues.map(v=>'<button class="venue-option" data-venue="'+v.id+'" aria-pressed="'+(v.id===state.venue)+'"><strong>'+esc(v.name)+'</strong><span>'+esc(v.city)+'</span>'+(v.id===state.venue?"<b>✓</b>":"")+"</button>").join("");
+  $("#venue-type-options").innerHTML=[["beach","BEACH GROUNDS","🌊"],["green","GREEN STADIUMS","🏟️"]].map(([type,label,icon])=>'<button class="venue-type-button" data-venue-type="'+type+'" aria-pressed="'+(state.venueType===type)+'"><span>'+icon+'</span> '+label+' <small>'+venues.filter(v=>v.type===type).length+'</small></button>').join("");
+  $("#venue-grid").innerHTML=venues.filter(v=>v.type===state.venueType).map(v=>'<button class="venue-option '+v.type+'" data-venue="'+v.id+'" aria-pressed="'+(v.id===state.venue)+'"><strong>'+esc(v.name)+'</strong><span class="venue-type-label">'+(v.type==="beach"?"BEACH GROUND":"GREEN STADIUM")+'</span><span>'+esc(v.city)+'</span>'+(v.id===state.venue?"<b>✓</b>":"")+"</button>").join("");
   $("#over-options").innerHTML=[5,10,20,30,50].map(n=>'<button class="choice-button" data-overs="'+n+'" aria-pressed="'+(n===state.overs)+'">'+n+" overs</button>").join("");
   const tossInfo=$("#setup-toss-preview");
   if(tossInfo){const caps=state.sideTeams.map(id=>teamById[id].captain||teamById[id].players[0]||"Captain");tossInfo.innerHTML="<strong>"+esc(caps[0])+" <span>vs</span> "+esc(caps[1])+'</strong><small>Heads or tails · toss winner chooses bat or bowl</small>';}
@@ -362,8 +368,60 @@ function renderMatch(){
   $("#score-ribbon").innerHTML='<div class="ribbon-team"><span>'+a.flag+" "+esc(a.name)+'</span><strong>'+s0.runs+"/"+s0.wickets+'</strong><small>'+formatOvers(s0.legal)+" ov"+(game.inningsIndex===0?" · 1ST":"")+'</small></div><div class="ribbon-divider">VS</div><div class="ribbon-team"><span>'+b.flag+" "+esc(b.name)+'</span><strong>'+s1.runs+"/"+s1.wickets+'</strong><small>'+formatOvers(s1.legal)+" ov"+(game.inningsIndex===1?" · 2ND":"")+'</small></div>';
   $("#scene-score").textContent=teamById[game.teamIds[inn.battingSide]].name+" "+inn.runs+"/"+inn.wickets;
   $("#scene-target").textContent=inn.target===null?game.overs+" OVERS · FIRST INNINGS":"TARGET "+inn.target+" · NEED "+Math.max(0,inn.target-inn.runs)+" FROM "+Math.max(0,game.overs*6-inn.legal)+" BALLS";
-  $("#ground-name").textContent=venue.name;$("#ground-city").textContent=venue.city;
+  $("#ground-name").textContent=venue.name;$("#ground-city").textContent=venue.city;$("#ground-type-label").textContent=venue.type==="beach"?"BEACH GROUND":"GREEN STADIUM";$("#scene-surface").textContent=venue.type==="beach"?"SAND PITCH · INTERNATIONAL TOUR":"GREEN OUTFIELD · INTERNATIONAL TOUR";$("#match-scene").setAttribute("aria-label",venue.type==="beach"?"Beach cricket at "+venue.name:"Cricket at "+venue.name);
   renderControls();renderScorecard();renderResumeCard();syncSwipeHint();saveLocalData();drawScene();
+}
+function drawBeachGround(ctx){
+  if(beachArtwork.complete&&beachArtwork.naturalWidth){
+    const ratio=1200/675,source=beachArtwork.naturalWidth/beachArtwork.naturalHeight;let sx=0,sy=0,sw=beachArtwork.naturalWidth,sh=beachArtwork.naturalHeight;
+    if(source>ratio){sw=beachArtwork.naturalHeight*ratio;sx=(beachArtwork.naturalWidth-sw)/2;}else{sh=beachArtwork.naturalWidth/ratio;sy=(beachArtwork.naturalHeight-sh)/2;}
+    ctx.drawImage(beachArtwork,sx,sy,sw,sh,0,0,1200,675);return;
+  }
+  const grad=ctx.createLinearGradient(0,0,0,675);grad.addColorStop(0,"#8bcfda");grad.addColorStop(.50,"#48aebb");grad.addColorStop(.51,"#ecd09a");grad.addColorStop(1,"#d2ad72");ctx.fillStyle=grad;ctx.fillRect(0,0,1200,675);
+  ctx.fillStyle="rgba(255,255,255,.24)";for(let i=0;i<7;i++){ctx.beginPath();ctx.ellipse(70+i*190,360+(i%2)*20,95,8,0,0,Math.PI*2);ctx.fill();}
+  ctx.fillStyle="#9b7548";ctx.fillRect(420,330,360,16);ctx.fillStyle="#f7e3b9";ctx.fillRect(565,280,70,135);
+}
+function drawPlayerFigure(ctx,x,y,scale,color,pose){
+  ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);
+  ctx.fillStyle="rgba(13,41,39,.2)";ctx.beginPath();ctx.ellipse(0,1,9,3,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(0,-26,4.5,0,Math.PI*2);ctx.fillStyle="#e4b28a";ctx.fill();
+  ctx.strokeStyle=color;ctx.lineWidth=7;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(0,-21);ctx.lineTo(0,-10);ctx.stroke();
+  ctx.lineWidth=3.4;ctx.beginPath();
+  if(pose==="run"){ctx.moveTo(0,-19);ctx.lineTo(-7,-13);ctx.moveTo(0,-19);ctx.lineTo(7,-25);}
+  else{ctx.moveTo(0,-19);ctx.lineTo(-7,-12);ctx.moveTo(0,-19);ctx.lineTo(7,-12);}
+  ctx.stroke();
+  ctx.strokeStyle="#243d3d";ctx.lineWidth=3.7;ctx.beginPath();
+  if(pose==="run"){ctx.moveTo(0,-10);ctx.lineTo(-6,-4);ctx.moveTo(0,-10);ctx.lineTo(7,-2);}
+  else{ctx.moveTo(0,-10);ctx.lineTo(-4,0);ctx.moveTo(0,-10);ctx.lineTo(4,0);}
+  ctx.stroke();
+  if(pose==="bat"){ctx.strokeStyle="#f2dfb9";ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(7,-12);ctx.lineTo(14,-1);ctx.stroke();}
+  ctx.restore();
+}
+function drawGreenStadium(ctx,venue,runProgress){
+  const sky=ctx.createLinearGradient(0,0,0,675);sky.addColorStop(0,venue.sky);sky.addColorStop(.55,"#e4eff0");sky.addColorStop(.56,"#438d65");sky.addColorStop(1,"#176542");ctx.fillStyle=sky;ctx.fillRect(0,0,1200,675);
+  ctx.fillStyle=venue.sun;ctx.beginPath();ctx.arc(1020,90,38,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="rgba(255,255,255,.55)";[[190,85,80],[380,120,56],[790,75,66]].forEach(([x,y,r])=>{ctx.beginPath();ctx.ellipse(x,y,r,13,0,0,Math.PI*2);ctx.fill();});
+  ctx.fillStyle="#d7dedc";ctx.beginPath();ctx.moveTo(18,245);ctx.lineTo(185,173);ctx.lineTo(420,236);ctx.lineTo(420,333);ctx.lineTo(20,380);ctx.closePath();ctx.fill();
+  ctx.fillStyle="#c5d0ce";ctx.beginPath();ctx.moveTo(1182,245);ctx.lineTo(1015,173);ctx.lineTo(780,236);ctx.lineTo(780,333);ctx.lineTo(1180,380);ctx.closePath();ctx.fill();
+  ctx.fillStyle="#536e70";ctx.fillRect(28,207,375,20);ctx.fillRect(797,207,375,20);
+  for(let row=0;row<5;row++)for(let col=0;col<32;col++){
+    const lx=38+col*11,rx=1162-col*11,y=242+row*18+(col>23?Math.abs(col-23)*2:0);
+    ctx.fillStyle=["#cf6960","#e5c56f","#5b8292","#f2eee0","#7b9872"][(col+row*3)%5];
+    ctx.fillRect(lx,y,4,4);ctx.fillRect(rx,y,4,4);
+  }
+  ctx.fillStyle="#f7f5e9";ctx.fillRect(26,330,382,8);ctx.fillRect(792,330,382,8);
+  const field=ctx.createRadialGradient(600,440,70,600,455,620);field.addColorStop(0,"#67a75e");field.addColorStop(.7,"#418650");field.addColorStop(1,"#246c47");ctx.fillStyle=field;ctx.beginPath();ctx.ellipse(600,475,580,268,0,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle="rgba(247,246,222,.88)";ctx.lineWidth=3;ctx.setLineDash([9,8]);ctx.beginPath();ctx.ellipse(600,475,520,230,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle="#c7d9b0";ctx.beginPath();ctx.moveTo(565,337);ctx.lineTo(635,337);ctx.lineTo(668,635);ctx.lineTo(532,635);ctx.closePath();ctx.fill();
+  ctx.fillStyle="#b6c99a";ctx.beginPath();ctx.moveTo(582,364);ctx.lineTo(618,364);ctx.lineTo(636,612);ctx.lineTo(564,612);ctx.closePath();ctx.fill();
+  ctx.strokeStyle="#f9f6e6";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(578,382);ctx.lineTo(622,382);ctx.moveTo(541,597);ctx.lineTo(659,597);ctx.stroke();
+  [[600,374],[600,590]].forEach(([x,y])=>{ctx.strokeStyle="#fff9e8";ctx.lineWidth=2;for(let i=-1;i<=1;i++){ctx.beginPath();ctx.moveTo(x+i*6,y);ctx.lineTo(x+i*6,y-17);ctx.stroke();}ctx.beginPath();ctx.moveTo(x-10,y-7);ctx.lineTo(x+10,y-7);ctx.stroke();});
+  [[370,438],[465,520],[735,500],[850,420],[300,518],[930,540],[485,405],[715,410]].forEach((p,i)=>drawPlayerFigure(ctx,p[0],p[1],i<4?.8:.67,i%2?"#f2f0e5":"#e9c95e","field"));
+  const bowlerX=535+clamp(runProgress||0,0,1)*65;drawPlayerFigure(ctx,bowlerX,425,.82,"#e9c95e",runProgress&&runProgress<.8?"run":"field");
+  drawPlayerFigure(ctx,600,535,1.03,"#f2f0e5","bat");
+  drawPlayerFigure(ctx,587,388,.72,"#f2f0e5","field");
+  ctx.fillStyle="rgba(15,44,39,.48)";ctx.fillRect(0,0,1200,48);
+  ctx.fillStyle="#f7f4e8";ctx.font="500 13px sans-serif";ctx.fillText(venue.name.toUpperCase()+" · MATCH DAY",28,30);
 }
 function drawScene(){
   const canvas=$("#match-scene");if(!canvas)return;
@@ -371,22 +429,18 @@ function drawScene(){
   const dpr=Math.min(window.devicePixelRatio||1,2),w=rect.width,h=rect.height;
   if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
   const ctx=canvas.getContext("2d");ctx.setTransform(canvas.width/1200,0,0,canvas.height/675,0,0);
-  if(beachArtwork.complete&&beachArtwork.naturalWidth){
-    const ratio=1200/675,source=beachArtwork.naturalWidth/beachArtwork.naturalHeight;let sx=0,sy=0,sw=beachArtwork.naturalWidth,sh=beachArtwork.naturalHeight;
-    if(source>ratio){sw=beachArtwork.naturalHeight*ratio;sx=(beachArtwork.naturalWidth-sw)/2;}else{sh=beachArtwork.naturalWidth/ratio;sy=(beachArtwork.naturalHeight-sh)/2;}
-    ctx.drawImage(beachArtwork,sx,sy,sw,sh,0,0,1200,675);
-  }else{
-    const grad=ctx.createLinearGradient(0,0,0,675);grad.addColorStop(0,"#8bcfda");grad.addColorStop(.50,"#48aebb");grad.addColorStop(.51,"#ecd09a");grad.addColorStop(1,"#d2ad72");ctx.fillStyle=grad;ctx.fillRect(0,0,1200,675);
-    ctx.fillStyle="rgba(255,255,255,.24)";for(let i=0;i<7;i++){ctx.beginPath();ctx.ellipse(70+i*190,360+(i%2)*20,95,8,0,0,Math.PI*2);ctx.fill();}
-    ctx.fillStyle="#9b7548";ctx.fillRect(420,330,360,16);ctx.fillStyle="#f7e3b9";ctx.fillRect(565,280,70,135);
-    ctx.fillStyle="#fff7dd";ctx.beginPath();ctx.arc(600,350,8,0,Math.PI*2);ctx.fill();
+  const game=state.game,venue=venueById[game?.venue||state.venue],running=game&&(game.phase==="bat-flight"||game.phase==="bowl-meter"),elapsed=running?performance.now()-game.startedAt:0;
+  if(venue?.type==="green")drawGreenStadium(ctx,venue,running?clamp(elapsed/900,0,1):1);
+  else drawBeachGround(ctx);
+  if(venue?.type==="beach"&&running){
+    const p=clamp(elapsed/game.delivery.duration,0,1);
+    drawPlayerFigure(ctx,540+clamp(elapsed/900,0,1)*60,425,.82,"#e9c95e",p<.72?"run":"field");
+    drawPlayerFigure(ctx,600,535,1.03,"#f2f0e5",p>.8?"bat":"field");
   }
-  const game=state.game;
-  if(game&&game.delivery&&(game.phase==="bat-flight"||game.phase==="bowl-meter")){
-    const p=clamp((performance.now()-game.startedAt)/game.delivery.duration,0,1),x=600+Math.sin(p*3.1)*30,y=540-p*230,r=10-p*3;
-    ctx.strokeStyle="rgba(255,248,214,.58)";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(x-4,y+55);ctx.quadraticCurveTo(x-15,y+20,x,y);ctx.stroke();
-    ctx.fillStyle="#fff8e7";ctx.beginPath();ctx.arc(x,y,Math.max(3,r),0,Math.PI*2);ctx.fill();
-    requestAnimationFrame(drawScene);
+  if(running&&game.delivery){
+    const p=clamp(elapsed/game.delivery.duration,0,1),x=600+Math.sin(p*3.1)*30,y=(venue?.type==="green"?365:330)+p*185,r=10-p*3;
+    ctx.strokeStyle="rgba(255,248,214,.72)";ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(x-4,y-42);ctx.quadraticCurveTo(x-15,y-18,x,y);ctx.stroke();
+    ctx.fillStyle="#fff8e7";ctx.beginPath();ctx.arc(x,y,Math.max(3,r),0,Math.PI*2);ctx.fill();requestAnimationFrame(drawScene);
   }
 }
 function drawMenuScene(){
@@ -439,7 +493,8 @@ function renderApp(){
   document.addEventListener("click",e=>{
     const button=e.target.closest("button");if(!button)return;
     if(button.dataset.overs){state.overs=Number(button.dataset.overs);renderSetup();return;}
-    if(button.dataset.venue){state.venue=button.dataset.venue;renderSetup();return;}
+    if(button.dataset.venue){state.venue=button.dataset.venue;state.venueType=venueById[state.venue].type;renderSetup();return;}
+    if(button.dataset.venueType){if(["beach","green"].includes(button.dataset.venueType)){state.venueType=button.dataset.venueType;if(!venues.some(v=>v.id===state.venue&&v.type===state.venueType))state.venue=venues.find(v=>v.type===state.venueType)?.id||state.venue;renderSetup();}return;}
     if(button.dataset.squadSide!==undefined){state.squadSide=Number(button.dataset.squadSide);state.squadPool=state.sideTeams[state.squadSide]==="LEG"?"legends":"current";renderSquads();return;}
     if(button.dataset.squadPool){state.squadPool=button.dataset.squadPool;renderSquads();return;}
     if(button.dataset.playerKey){togglePlayer(button.dataset.playerKey);return;}
