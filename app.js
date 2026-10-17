@@ -536,7 +536,7 @@ function renderApp(){
       case "home":openHome();break;
       case "resume":if(state.game){$("#setup-screen").hidden=true;$("#game-screen").hidden=false;renderMatch();}break;
       case "launch":case "next-ball":startDelivery();break;
-      case "release-bowl":releaseBowl();break;
+      case "release-bowl":if(state.controls.bowlMode==="tap")releaseBowl();else showToast("Flick the pitch to release, or switch Bowling release to Tap.");break;
       case "start-chase":startChase();break;
       case "rematch":openHome();tossOpen();break;
       case "open-control-settings":renderControlSettings();break;
