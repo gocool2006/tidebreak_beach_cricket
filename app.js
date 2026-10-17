@@ -435,7 +435,7 @@ function releaseBowl(){
 }
 function startChase(){
   const game=state.game;if(!game||game.status!=="break")return;
-  game.inningsIndex=1;game.innings=makeInnings(1-game.firstScore.battingSide,game.firstScore.runs+1);game.status="live";game.phase="ready";game.bowlType="pace";game.bowlLength="good";game.event="The chase is on. Target "+(game.firstScore.runs+1)+".";renderMatch();
+  game.inningsIndex=1;game.innings=makeInnings(1-game.firstScore.battingSide,game.firstScore.runs+1);game.status="live";game.phase="ready";game.bowlType="pace";game.bowlLength="good";game.event="The chase is on. Target "+(game.firstScore.runs+1)+".";startDelivery();
 }
 function inningsScore(index){
   const g=state.game;if(!g)return {runs:0,wickets:0,legal:0};
@@ -465,7 +465,9 @@ function renderControls(){
   if(game.phase==="result"){
     root.innerHTML='<div class="play-overline">'+(userBat?"YOUR SIDE BATTING":"YOUR SIDE BOWLING")+' · '+formatOvers(inn.legal)+' OVERS</div><h2>'+esc(game.event)+'</h2><p>Score: '+inn.runs+'/'+inn.wickets+' · '+formatOvers(inn.legal)+' overs</p><button class="primary-button" data-command="next-ball">NEXT BALL <span>↗</span></button>';return;
   }
-  root.innerHTML='<div class="play-overline">'+(userBat?"YOUR SIDE BATTING":"YOUR SIDE BOWLING")+' · '+esc(striker?.name||"Ready")+' ON STRIKE</div><h2>Set yourself on the sand.</h2><p>Call the next delivery at Wankhede beach.</p><button class="primary-button" data-command="launch">BOWL NEXT DELIVERY <span>↗</span></button><div class="next-ball-row"><span class="hot-key">BALL '+(inn.legal+1)+'</span><span class="hot-key">'+formatOvers(inn.legal)+' OVERS</span></div>';
+  const readyAction=userBat?"FACE NEXT DELIVERY":"BOWL NEXT DELIVERY";
+  const selectedGround=venueById[game.venue]?.name||"the ground";
+  root.innerHTML='<div class="play-overline">'+(userBat?"YOUR SIDE BATTING":"YOUR SIDE BOWLING")+' · '+esc(striker?.name||"Ready")+' ON STRIKE</div><h2>Set yourself on the sand.</h2><p>Ready for the next delivery at '+esc(selectedGround)+'.</p><button class="primary-button" data-command="launch">'+readyAction+' <span>↗</span></button><div class="next-ball-row"><span class="hot-key">BALL '+(inn.legal+1)+'</span><span class="hot-key">'+formatOvers(inn.legal)+' OVERS</span></div>';
 }
 function renderScorecard(){
   const game=state.game,inn=game.innings,batSide=teamById[game.teamIds[inn.battingSide]],bowlSide=teamById[game.teamIds[inn.bowlingSide]];
