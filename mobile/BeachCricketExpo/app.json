@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Beach Cricket 3D",
+    "slug": "beach-cricket-expo",
+    "scheme": "beachcricket",
+    "description": "Expo cricket prototype with portrait menus and a full-screen landscape stadium match, timing-based batting, touch-controlled bowling, swing, pace and a no-ball release zone.",
+    "version": "1.0.0",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tideline.beachcricket"
+    },
+    "android": {
+      "package": "com.tideline.beachcricket",
+      "backgroundColor": "#071E1C",
+      "adaptiveIcon": {
+        "backgroundColor": "#071E1C",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-asset"
+    ]
+  }
+}

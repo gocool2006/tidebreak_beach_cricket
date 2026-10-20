@@ -41,3 +41,8 @@ This version includes a captain’s toss, two innings of batting and bowling, to
 ## Publish and share
 
 The included workflow deploys the playable files and original beach art to GitHub Pages. This repository is public. In the repository, open **Settings → Pages** and set **Build and deployment → Source** to **GitHub Actions** once. Then re-run the latest deployment in **Actions** (or push a new commit). After the workflow succeeds, share `https://gocool2006.github.io/tidebreak_beach_cricket/`.
+
+
+## Android mobile app
+
+The Expo/React Native mobile version is available in [`mobile/BeachCricketExpo`](mobile/BeachCricketExpo/). For setup and Android phone instructions, follow its [README](mobile/BeachCricketExpo/README.md).
